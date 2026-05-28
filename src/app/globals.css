@@ -1,26 +1,301 @@
 @import "tailwindcss";
 
+/* ===========================================================
+   HM HOME — Dark Luxe Design System
+   Ported from design/styles.css
+   =========================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0a0908;
+  --bg-2: #0f0d0b;
+  --surface: #15110d;
+  --surface-2: #1d1812;
+  --elevated: #261f17;
+  --border: #2a241c;
+  --border-soft: #1f1a14;
+
+  --gold: #c2a875;
+  --gold-bright: #dcc28e;
+  --gold-deep: #8a7449;
+
+  --text: #f2ede4;
+  --text-2: #c9c0b1;
+  --muted: #7d7568;
+  --muted-2: #5a5347;
+
+  --it-green: #2f6b3f;
+  --it-red:   #b03430;
+
+  --sale: #c46a3a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-elevated: var(--elevated);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-sale: var(--sale);
+
+  --font-sans: var(--font-outfit);
+  --font-serif: var(--font-cormorant);
+  --font-mono: var(--font-jetbrains);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Type utilities -------------------------------------------- */
+.serif {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.mono {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-weight: 400;
+}
+.eyebrow {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.dim { color: var(--muted); }
+
+/* Buttons --------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  background: transparent;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.btn:hover { background: var(--gold); color: #15110d; }
+
+.btn--solid {
+  background: var(--gold);
+  color: #15110d;
+  border-color: var(--gold);
+}
+.btn--solid:hover { background: var(--gold-bright); border-color: var(--gold-bright); }
+
+.btn--ghost {
+  border-color: var(--border);
+  color: var(--text);
+}
+.btn--ghost:hover { border-color: var(--gold); color: var(--gold); background: transparent; }
+
+/* Divider --------------------------------------------------- */
+.divider {
+  height: 1px;
+  background: var(--border-soft);
+  border: 0;
+  margin: 0;
+}
+
+/* Placeholder image (used for categories / no-photo products) */
+.ph {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(135deg,
+      #1c1812 0px, #1c1812 8px,
+      #15110d 8px, #15110d 16px);
+  color: var(--muted);
+}
+.ph::after {
+  content: attr(data-label);
+  position: absolute;
+  inset: auto 0 14px 0;
+  text-align: center;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--muted-2);
+  text-transform: uppercase;
+}
+
+/* Badges ---------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: var(--gold);
+  color: #15110d;
+}
+.badge--sale {
+  background: var(--sale);
+  color: #15110d;
+}
+.badge--new {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+/* Italian flag rule (logo affordance) ----------------------- */
+.flag-rule {
+  display: inline-flex;
+  height: 2px;
+  width: 60px;
+}
+.flag-rule span { flex: 1; }
+.flag-rule .g { background: var(--it-green); }
+.flag-rule .w { background: #ffffff; }
+.flag-rule .r { background: var(--it-red); }
+
+/* ===========================================================
+   Responsive layer
+   The design was authored at a fixed 1440px width with inline
+   pixel styles. Inline styles can't hold media queries, so the
+   layout-critical containers reference these classes instead.
+   Breakpoints: 1024 (tablet), 768 (large phone), 520 (phone).
+   =========================================================== */
+
+* { min-width: 0; }
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video { max-width: 100%; height: auto; }
+
+/* Fluid horizontal page padding — pairs with clamp() vertical insets
+   set inline on each section. */
+.r-px { padding-left: clamp(20px, 5vw, 56px); padding-right: clamp(20px, 5vw, 56px); }
+
+/* --- Product / category / footer grids --- */
+.r-grid-cards  { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
+.r-grid-cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+.r-grid-cats   { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.r-grid-footer { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 56px; }
+
+@media (max-width: 1024px) {
+  .r-grid-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .r-grid-cards, .r-grid-cards3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .r-grid-cats   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .r-grid-footer { grid-template-columns: 1fr 1fr; gap: 36px; }
+}
+@media (max-width: 520px) {
+  .r-grid-cats   { grid-template-columns: 1fr; }
+  .r-grid-footer { grid-template-columns: 1fr; gap: 28px; }
+}
+
+/* --- Two-column page splits that stack on small screens --- */
+.r-split          { display: grid; gap: clamp(28px, 4vw, 56px); align-items: flex-start; }
+.r-split--shop    { grid-template-columns: 220px 1fr; }
+.r-split--product { grid-template-columns: 1.15fr 1fr; }
+.r-split--cart    { grid-template-columns: 1.7fr 1fr; }
+.r-split--checkout{ grid-template-columns: 1.5fr 1fr; }
+.r-split--2       { grid-template-columns: 1.4fr 1fr; }
+
+@media (max-width: 900px) {
+  .r-split--product, .r-split--cart, .r-split--checkout, .r-split--2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .r-split--shop { grid-template-columns: 1fr; }
+}
+
+/* --- Header --- */
+/* Desktop: original 3-column grid — nav | logo | nav */
+.r-header-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+/* Hamburger hidden on desktop; cart icon text label shown */
+.r-hamburger-wrap { display: none; }
+.r-show-phone     { display: none; }
+
+@media (max-width: 768px) {
+  /* Mobile: auto (hamburger) | auto (wordmark) | 1fr (cart, right-aligned) */
+  .r-header-grid        { grid-template-columns: auto auto 1fr; gap: 12px; }
+  .r-header-nav-left    { display: none !important; }
+  .r-hamburger-wrap     { display: block; }
+}
+@media (max-width: 520px) {
+  .r-hide-phone  { display: none !important; }
+  .r-show-phone  { display: inline-flex; }
+}
+
+/* --- Hero overlays that don't fit small screens --- */
+@media (max-width: 768px) {
+  .r-hero-tag, .r-hero-cue { display: none !important; }
+}
+@media (max-width: 520px) {
+  .r-hero-stats { flex-wrap: wrap; gap: 22px !important; }
+}
+
+/* --- A flex row that becomes a column on phones --- */
+@media (max-width: 640px) {
+  .r-stack-sm { flex-direction: column !important; align-items: flex-start !important; }
+}
+
+/* --- Admin chrome --- */
+@media (max-width: 768px) {
+  .r-admin-shell { grid-template-columns: 1fr !important; }
+  .r-admin-sidebar {
+    position: static !important;
+    height: auto !important;
+    width: auto !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px !important;
+    padding: 16px 20px !important;
+  }
+  .r-admin-sidebar nav { flex-direction: row !important; flex-wrap: wrap; }
+  .r-admin-sidebar .r-admin-signout { margin-top: 0 !important; margin-left: auto; }
+  .r-admin-main { padding: 24px 20px !important; }
+}
+
+/* --- Wide tables scroll horizontally on small screens ---
+   Setting the table to display:block keeps its rows rendering as a table
+   (anonymous table boxes are generated around the row groups) while letting
+   the element itself scroll. One class, no wrapper div needed. */
+@media (max-width: 640px) {
+  .r-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
 }
