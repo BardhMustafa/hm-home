@@ -17,8 +17,10 @@ const productSchema = z.object({
   description: z.string().trim().optional().nullable(),
   price: z.coerce.number().min(0, "Çmimi nuk mund të jetë negativ."),
   discount_price: z.coerce.number().min(0).optional().nullable(),
-  sku: z.string().trim().optional().nullable(),
-  stock: z.coerce.number().int().min(0, "Stoku nuk mund të jetë negativ."),
+  stock: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : v),
+    z.coerce.number().int().min(0, "Stoku nuk mund të jetë negativ.").nullable(),
+  ),
   featured: z.coerce.boolean().optional().default(false),
   category_id: z.string().uuid().optional().nullable(),
 });
@@ -52,8 +54,7 @@ function parseProductForm(formData: FormData) {
     description: formData.get("description") || null,
     price: formData.get("price"),
     discount_price: formData.get("discount_price") || null,
-    sku: formData.get("sku") || null,
-    stock: formData.get("stock"),
+    stock: formData.get("stock") || null,
     featured: formData.get("featured") === "on",
     category_id: formData.get("category_id") || null,
   };

@@ -14,7 +14,7 @@ export type Product = {
   price: number;
   discount_price: number | null;
   sku: string | null;
-  stock: number;
+  stock: number | null;
   featured: boolean;
   category_id: string | null;
   images: ProductImage[];

@@ -130,7 +130,7 @@ export default async function AdminProductsPage() {
                       fontFamily: "var(--font-jetbrains)",
                     }}
                   >
-                    {p.stock}
+                    {p.stock ?? "∞"}
                   </Td>
                   <Td>{p.featured ? "•" : ""}</Td>
                   <Td style={{ textAlign: "right" }}>

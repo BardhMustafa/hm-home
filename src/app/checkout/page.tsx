@@ -90,7 +90,7 @@ export default async function CheckoutPage() {
                     <span style={{ color: "var(--muted)" }}>× {l.quantity}</span>
                   </span>
                   <span style={{ color: "var(--text)" }}>
-                    € {l.line_total.toFixed(2)}
+                    {l.line_total.toFixed(2)} €
                   </span>
                 </li>
               ))}
@@ -108,7 +108,7 @@ export default async function CheckoutPage() {
                 Totali
               </span>
               <span className="serif" style={{ fontSize: 26, color: "var(--gold)" }}>
-                € {cart.subtotal.toFixed(2)}
+                {cart.subtotal.toFixed(2)} €
               </span>
             </div>
             <p

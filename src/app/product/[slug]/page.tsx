@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ProductGallery } from "@/components/shop/product-gallery";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -10,7 +11,9 @@ import {
 import { Header } from "@/components/home/header";
 import { Footer } from "@/components/home/footer";
 import { ProductCard } from "@/components/home/product-card";
-import { AddToCartButton } from "@/components/shop/add-to-cart-button";
+import { ProductActions } from "@/components/shop/product-actions";
+import { ProductAccordion } from "@/components/shop/product-accordion";
+import { getWishlistedIds } from "@/lib/wishlist";
 
 type PageParams = { params: Promise<{ slug: string }> };
 
@@ -47,7 +50,10 @@ export default async function ProductPage({ params }: PageParams) {
     .select("category_id")
     .eq("id", product.id)
     .single();
-  const related = await getRelatedProducts(product.id, row?.category_id ?? null);
+  const [related, wishlistedIds] = await Promise.all([
+    getRelatedProducts(product.id, row?.category_id ?? null),
+    getWishlistedIds(),
+  ]);
 
   const hasDiscount =
     typeof product.discount_price === "number" &&
@@ -66,7 +72,7 @@ export default async function ProductPage({ params }: PageParams) {
       price: shownPrice,
       priceCurrency: "EUR",
       availability:
-        product.stock > 0
+        product.stock === null || product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
     },
@@ -109,154 +115,196 @@ export default async function ProductPage({ params }: PageParams) {
         </nav>
 
         <div className="r-split r-split--product">
-          {/* Gallery */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div
-              style={{
-                position: "relative",
-                aspectRatio: "4 / 5",
-                background: "var(--surface)",
-                overflow: "hidden",
-              }}
-            >
-              {product.images[0] ? (
-                <Image
-                  src={product.images[0].image_url}
-                  alt={product.name}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 60vw"
-                  priority
-                  style={{ objectFit: "cover" }}
-                />
-              ) : (
-                <div
-                  className="ph"
-                  data-label="product"
-                  style={{ position: "absolute", inset: 0 }}
-                />
-              )}
-            </div>
-            {product.images.length > 1 && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4, 1fr)",
-                  gap: 8,
-                }}
-              >
-                {product.images.slice(1, 5).map((img) => (
-                  <div
-                    key={img.image_url}
-                    style={{
-                      position: "relative",
-                      aspectRatio: "1 / 1",
-                      background: "var(--surface)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Image
-                      src={img.image_url}
-                      alt=""
-                      fill
-                      sizes="200px"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ProductGallery images={product.images} name={product.name} />
 
           {/* Info */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            {product.category && (
-              <div className="eyebrow">{product.category.name}</div>
-            )}
-            <h1
-              className="serif"
-              style={{
-                fontSize: "clamp(34px, 6vw, 56px)",
-                margin: 0,
-                lineHeight: 1,
-                letterSpacing: "-0.015em",
-              }}
-            >
-              {product.name}
-            </h1>
+          <div style={{ display: "flex", flexDirection: "column" }}>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 16,
-                paddingBottom: 24,
-                borderBottom: "1px solid var(--border-soft)",
-              }}
-            >
-              <span
+            {/* Category + name */}
+            <div style={{ marginBottom: 20 }}>
+              {product.category && (
+                <div className="eyebrow" style={{ marginBottom: 12 }}>{product.category.name}</div>
+              )}
+              <h1
                 className="serif"
-                style={{ fontSize: 36, color: "var(--gold)" }}
+                style={{
+                  fontSize: "clamp(32px, 5vw, 52px)",
+                  margin: 0,
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.015em",
+                }}
               >
-                € {shownPrice.toFixed(2)}
+                {product.name}
+              </h1>
+              {product.sku && (
+                <div style={{ marginTop: 10, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--muted)" }}>
+                  SKU: {product.sku}
+                </div>
+              )}
+            </div>
+
+            <div style={{ height: 1, background: "var(--border-soft)", marginBottom: 24 }} />
+
+            {/* Price */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 24 }}>
+              <span style={{ fontSize: 28, fontWeight: 500, color: "var(--gold)", lineHeight: 1, letterSpacing: "0.01em" }}>
+                {shownPrice} €
               </span>
               {hasDiscount && (
-                <span
-                  style={{
-                    color: "var(--muted-2)",
-                    fontSize: 18,
-                    textDecoration: "line-through",
-                  }}
-                >
-                  € {product.price.toFixed(2)}
+                <span style={{ color: "var(--muted-2)", fontSize: 16, textDecoration: "line-through", fontWeight: 400 }}>
+                  {product.price} €
                 </span>
               )}
             </div>
 
+            {/* Description */}
             {product.description && (
-              <p
-                style={{
-                  fontSize: 16,
-                  lineHeight: 1.65,
-                  color: "var(--text-2)",
-                  margin: 0,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {product.description}
-              </p>
+              <>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-2)", margin: "0 0 24px" }}>
+                  {product.description}
+                </p>
+                <div style={{ height: 1, background: "var(--border-soft)", marginBottom: 24 }} />
+              </>
             )}
 
-            <div
-              style={{
-                fontSize: 12,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                color: product.stock > 0 ? "var(--gold)" : "var(--sale)",
-              }}
-            >
-              {product.stock > 0
-                ? `Në stok · ${product.stock} copë`
-                : "Përkohësisht nuk është në stok"}
-            </div>
-
-            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
-              <AddToCartButton productId={product.id} disabled={product.stock <= 0} />
-              <button className="btn btn--ghost">♡</button>
-            </div>
-
-            {product.sku && (
-              <div
+            {/* Stock badge */}
+            <div style={{ marginBottom: 20 }}>
+              <span
                 style={{
-                  marginTop: 4,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 7,
                   fontSize: 11,
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
-                  color: "var(--muted)",
+                  padding: "6px 12px",
+                  border: `1px solid ${product.stock === 0 ? "var(--sale)" : "var(--gold)"}`,
+                  color: product.stock === 0 ? "var(--sale)" : "var(--gold)",
                 }}
               >
-                SKU: {product.sku}
+                <span
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: product.stock === 0 ? "var(--sale)" : "var(--gold)",
+                    flexShrink: 0,
+                  }}
+                />
+                {product.stock === null
+                  ? "Me porosi"
+                  : product.stock > 0
+                    ? `Në stok · ${product.stock} copë`
+                    : "Nuk është në stok"}
+              </span>
+            </div>
+
+            {/* Actions — qty selector + cart + wishlist */}
+            <ProductActions
+              productId={product.id}
+              disabled={product.stock !== null && product.stock <= 0}
+              initialWishlisted={wishlistedIds.has(product.id)}
+              stock={product.stock}
+            />
+
+            {/* Made-to-order delivery note */}
+            {product.stock === null && (
+              <div
+                style={{
+                  marginTop: 20,
+                  padding: "14px 16px",
+                  border: "1px solid var(--border-soft)",
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "flex-start",
+                }}
+              >
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div>
+                  <div style={{ fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 4 }}>
+                    Informacion i dorëzimit
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
+                    Ky produkt prodhohet sipas porosisë. Koha e pritjes është zakonisht 3–6 javë. Do t&apos;ju kontaktojmë për konfirmim pas porosisë.
+                  </p>
+                </div>
               </div>
             )}
+
+            {/* Trust badges */}
+            <div
+              className="product-trust-grid"
+              style={{
+                marginTop: 28,
+                paddingTop: 24,
+                borderTop: "1px solid var(--border-soft)",
+              }}
+            >
+              {[
+                {
+                  icon: (
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="3" width="15" height="13" rx="1" />
+                      <path d="M16 8h4l3 5v3h-7V8z" />
+                      <circle cx="5.5" cy="18.5" r="2.5" />
+                      <circle cx="18.5" cy="18.5" r="2.5" />
+                    </svg>
+                  ),
+                  label: "Dorëzim falas",
+                  sub: "Mbi €500",
+                },
+                {
+                  icon: (
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                  ),
+                  label: "Garanci 2 vjet",
+                  sub: "Çdo produkt",
+                },
+                {
+                  icon: (
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v6l4 2" />
+                    </svg>
+                  ),
+                  label: "Prodhim Europian",
+                  sub: "Nga viti 2014",
+                },
+              ].map((b) => (
+                <div
+                  key={b.label}
+                  className="product-trust-badge"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 8,
+                    textAlign: "center",
+                    padding: "16px 8px",
+                    border: "1px solid var(--border-soft)",
+                  }}
+                >
+                  <div style={{ color: "var(--gold)", flexShrink: 0 }}>{b.icon}</div>
+                  <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text)", fontWeight: 500 }}>
+                    {b.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.06em" }}>
+                    {b.sub}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Accordion — dimensions, materials, delivery, returns */}
+            <div style={{ marginTop: 32 }}>
+              <ProductAccordion />
+            </div>
           </div>
         </div>
 
@@ -275,7 +323,11 @@ export default async function ProductPage({ params }: PageParams) {
             </h2>
             <div className="r-grid-cards">
               {related.map((p) => (
-                <ProductCard key={p.slug} p={p} />
+                <ProductCard
+                  key={p.slug}
+                  p={p}
+                  isWishlisted={p.id ? wishlistedIds.has(p.id) : false}
+                />
               ))}
             </div>
           </section>

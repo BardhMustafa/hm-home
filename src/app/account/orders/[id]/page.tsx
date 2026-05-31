@@ -78,27 +78,27 @@ export default async function MyOrderPage({
             <tr key={i}>
               <Td>{it.product_name}</Td>
               <Td>{it.quantity}</Td>
-              <Td>€ {(Number(it.price) * it.quantity).toFixed(2)}</Td>
+              <Td>{(Number(it.price) * it.quantity).toFixed(2)} €</Td>
             </tr>
           ))}
           <tr>
             <Td colSpan={2} style={{ textAlign: "right", color: "var(--muted)" }}>
               Nën-totali
             </Td>
-            <Td>€ {Number(order.subtotal).toFixed(2)}</Td>
+            <Td>{Number(order.subtotal).toFixed(2)} €</Td>
           </tr>
           <tr>
             <Td colSpan={2} style={{ textAlign: "right", color: "var(--muted)" }}>
               Transporti
             </Td>
-            <Td>€ {Number(order.shipping_cost).toFixed(2)}</Td>
+            <Td>{Number(order.shipping_cost).toFixed(2)} €</Td>
           </tr>
           <tr>
             <Td colSpan={2} style={{ textAlign: "right", color: "var(--gold)" }}>
               Totali
             </Td>
             <Td style={{ color: "var(--gold)" }}>
-              € {Number(order.total).toFixed(2)}
+              {Number(order.total).toFixed(2)} €
             </Td>
           </tr>
         </tbody>

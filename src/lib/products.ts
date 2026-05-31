@@ -12,7 +12,7 @@ type RawProductRow = {
   slug: string;
   price: number;
   discount_price: number | null;
-  stock: number;
+  stock: number | null;
   featured: boolean;
   category: RawCategoryRef;
   images: RawImage[] | null;
@@ -29,6 +29,7 @@ function toCard(p: RawProductRow): ProductCardData {
   const hasDiscount =
     typeof p.discount_price === "number" && p.discount_price < Number(p.price);
   return {
+    id: p.id,
     name: p.name,
     slug: p.slug,
     category: categoryName(p.category) ?? "HM Home",
@@ -60,6 +61,8 @@ export type ShopFilters = {
   minPrice?: number;
   maxPrice?: number;
   sort?: "newest" | "price-asc" | "price-desc";
+  avail?: "stock" | "order";   // stock = in stock, order = made-to-order (stock IS NULL)
+  onSale?: boolean;
 };
 
 export async function getShopProducts(filters: ShopFilters = {}) {
@@ -75,6 +78,9 @@ export async function getShopProducts(filters: ShopFilters = {}) {
   if (filters.category) q = q.eq("category.slug", filters.category);
   if (typeof filters.minPrice === "number") q = q.gte("price", filters.minPrice);
   if (typeof filters.maxPrice === "number") q = q.lte("price", filters.maxPrice);
+  if (filters.avail === "stock") q = q.gt("stock", 0);
+  if (filters.avail === "order") q = q.is("stock", null);
+  if (filters.onSale) q = q.not("discount_price", "is", null);
 
   switch (filters.sort) {
     case "price-asc":
@@ -101,7 +107,7 @@ export type ProductDetail = {
   price: number;
   discount_price: number | null;
   sku: string | null;
-  stock: number;
+  stock: number | null;
   category: { name: string; slug: string } | null;
   images: { image_url: string; position: number }[];
 };
@@ -200,4 +206,35 @@ export async function getHomepageCategories(): Promise<HomepageCategory[]> {
     ...c,
     productCount: slugToCount.get(c.slug) ?? 0,
   }));
+}
+
+// Fetch up to `limit` products for each of the given category slugs.
+// Returns a map of slug → ProductCardData[].
+export async function getProductsByCategorySlugs(
+  slugs: string[],
+  limit = 2,
+): Promise<Record<string, ProductCardData[]>> {
+  if (!hasSupabase() || !slugs.length) return {};
+  const supabase = await createClient();
+
+  const { data: catRows } = await supabase
+    .from("categories")
+    .select("id, slug")
+    .in("slug", slugs);
+  if (!catRows?.length) return {};
+
+  const result: Record<string, ProductCardData[]> = {};
+  await Promise.all(
+    catRows.map(async (cat) => {
+      const { data } = await supabase
+        .from("products")
+        .select(
+          "id, name, slug, price, discount_price, stock, featured, category:categories(name), images:product_images(image_url, position)",
+        )
+        .eq("category_id", cat.id)
+        .limit(limit);
+      result[cat.slug] = (data as RawProductRow[] ?? []).map(toCard);
+    }),
+  );
+  return result;
 }

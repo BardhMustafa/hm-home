@@ -70,7 +70,7 @@ export async function placeOrder(
   for (const line of cart.lines) {
     const p = byId.get(line.product_id);
     if (!p) return { error: `${line.name} nuk është më në dispozicion.` };
-    if (p.stock < line.quantity) {
+    if (p.stock !== null && p.stock < line.quantity) {
       return {
         error: `Stoku i pamjaftueshëm për ${p.name} (mbeten ${p.stock}).`,
       };
@@ -138,10 +138,12 @@ export async function placeOrder(
   // we'd push this into a SQL function.
   for (const line of cart.lines) {
     const p = byId.get(line.product_id)!;
-    await admin
-      .from("products")
-      .update({ stock: p.stock - line.quantity })
-      .eq("id", line.product_id);
+    if (p.stock !== null) {
+      await admin
+        .from("products")
+        .update({ stock: p.stock - line.quantity })
+        .eq("id", line.product_id);
+    }
   }
 
   await clearCart(cart.cartId);

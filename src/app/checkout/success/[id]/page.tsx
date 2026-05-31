@@ -81,7 +81,7 @@ export default async function CheckoutSuccessPage({
           <div>
             <span style={{ color: "var(--muted)" }}>Totali: </span>
             <span style={{ color: "var(--gold)" }}>
-              € {Number(order.total).toFixed(2)}
+              {Number(order.total).toFixed(2)} €
             </span>
           </div>
         </div>

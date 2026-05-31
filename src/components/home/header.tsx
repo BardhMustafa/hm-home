@@ -34,7 +34,7 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
         left: 0,
         right: 0,
         background: overlay ? "transparent" : "var(--bg)",
-        zIndex: 10,
+        zIndex: 30,
       }}
     >
       {/* ── Left slot ──────────────────────────────────────────

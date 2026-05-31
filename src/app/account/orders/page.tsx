@@ -91,7 +91,7 @@ export default async function MyOrdersPage() {
                   </span>
                 </Td>
                 <Td style={{ color: "var(--gold)" }}>
-                  € {Number(o.total).toFixed(2)}
+                  {Number(o.total).toFixed(2)} €
                 </Td>
                 <Td style={{ textAlign: "right" }}>
                   <Link

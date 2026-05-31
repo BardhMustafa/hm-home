@@ -19,7 +19,7 @@ export type CartLine = {
   price: number;
   quantity: number;
   image_url: string | null;
-  stock: number;
+  stock: number | null;
   line_total: number;
 };
 
@@ -193,10 +193,8 @@ export async function addToCart(productId: string, qty = 1): Promise<void> {
     .eq("product_id", productId)
     .maybeSingle();
 
-  const nextQty = Math.min(
-    product.stock,
-    (existing?.quantity ?? 0) + qty,
-  );
+  const newQty = (existing?.quantity ?? 0) + qty;
+  const nextQty = product.stock === null ? newQty : Math.min(product.stock, newQty);
   if (existing) {
     await admin
       .from("cart_items")

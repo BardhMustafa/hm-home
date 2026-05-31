@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Outfit, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -8,8 +9,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const dmSans = DM_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
   display: "swap",
@@ -23,8 +24,8 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
+const dmMono = DM_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
   display: "swap",
@@ -33,11 +34,11 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "HM Home — Mobilje me stil",
   description:
-    "Mobilje të zgjedhura me dorë nga punëtoritë më të mira italiane. Komoditet i pakrahasueshëm, dizajn që zgjat një jetë.",
+    "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane. Komoditet i pakrahasueshëm, dizajn që zgjat një jetë.",
   openGraph: {
     title: "HM Home — Mobilje me stil",
     description:
-      "Mobilje të zgjedhura me dorë nga punëtoritë më të mira italiane.",
+      "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane.",
     type: "website",
     locale: "sq_AL",
   },
@@ -49,11 +50,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="sq">
+    <html lang="sq" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${cormorant.variable} ${jetbrains.variable} antialiased`}
+        className={`${dmSans.variable} ${cormorant.variable} ${dmMono.variable} antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

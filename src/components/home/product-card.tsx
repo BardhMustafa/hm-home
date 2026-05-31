@@ -3,71 +3,27 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-
-// Inline SVG icons — same set as the design's cards.jsx
-function Icon({
-  name,
-  size = 16,
-}: {
-  name: "heart" | "cart" | "eye";
-  size?: number;
-}) {
-  const paths: Record<string, React.ReactNode> = {
-    heart: (
-      <path
-        d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    ),
-    cart: (
-      <g
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20.6 8H6.2" />
-        <circle cx="10" cy="20" r="1.2" />
-        <circle cx="17" cy="20" r="1.2" />
-      </g>
-    ),
-    eye: (
-      <g fill="none" stroke="currentColor" strokeWidth="1.4">
-        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-        <circle cx="12" cy="12" r="2.8" />
-      </g>
-    ),
-  };
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      style={{ display: "block" }}
-    >
-      {paths[name]}
-    </svg>
-  );
-}
+import { WishlistButton } from "@/components/shop/wishlist-button";
+import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 
 export type ProductCardData = {
+  id?: string;
   name: string;
   slug: string;
   category: string;
   price: number;
   was?: number | null;
   badge?: "new" | "sale" | null;
-  image?: string | null; // public path; falls back to placeholder
+  image?: string | null;
 };
 
-// Editorial card (Variation A from the design).
-// Image-dominant, hover surfaces a smoked add-to-cart bar + quick actions.
-export function ProductCard({ p }: { p: ProductCardData }) {
+export function ProductCard({
+  p,
+  isWishlisted = false,
+}: {
+  p: ProductCardData;
+  isWishlisted?: boolean;
+}) {
   const [hover, setHover] = useState(false);
 
   return (
@@ -79,12 +35,15 @@ export function ProductCard({ p }: { p: ProductCardData }) {
         display: "block",
         color: "inherit",
         textDecoration: "none",
+        border: `1px solid ${hover ? "var(--gold-deep)" : "var(--border-soft)"}`,
+        transition: "border-color 0.3s ease",
       }}
     >
+      {/* Image */}
       <div
         style={{
           position: "relative",
-          aspectRatio: "4 / 5",
+          aspectRatio: "4 / 3",
           overflow: "hidden",
           background: "var(--surface)",
         }}
@@ -97,155 +56,114 @@ export function ProductCard({ p }: { p: ProductCardData }) {
             sizes="(max-width: 1024px) 50vw, 25vw"
             style={{
               objectFit: "cover",
-              transform: hover ? "scale(1.04)" : "scale(1)",
-              transition: "transform 0.5s ease",
+              transform: hover ? "scale(1.05)" : "scale(1)",
+              transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             }}
           />
         ) : (
-          <div
-            className="ph"
-            data-label={`product · ${p.slug}`}
-            style={{ position: "absolute", inset: 0 }}
-          />
+          <div className="ph" data-label={p.slug} style={{ position: "absolute", inset: 0 }} />
         )}
 
+        {/* Badge */}
         {p.badge && (
-          <div style={{ position: "absolute", top: 14, left: 14 }}>
-            <span
-              className={`badge ${
-                p.badge === "sale" ? "badge--sale" : "badge--new"
-              }`}
-            >
+          <div style={{ position: "absolute", top: 12, left: 12 }}>
+            <span className={`badge ${p.badge === "sale" ? "badge--sale" : "badge--new"}`}>
               {p.badge === "sale" ? "ulje" : "i ri"}
             </span>
           </div>
         )}
 
-        {/* Hover affordances — wishlist + quick view */}
+        {/* Wishlist — top right, fades in on hover */}
         <div
           style={{
             position: "absolute",
-            top: 14,
-            right: 14,
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
+            top: 12,
+            right: 12,
             opacity: hover ? 1 : 0,
             transform: `translateY(${hover ? 0 : -4}px)`,
-            transition: "all 0.25s ease",
+            transition: "opacity 0.25s ease, transform 0.25s ease",
             pointerEvents: hover ? "auto" : "none",
           }}
+          onClick={(e) => e.preventDefault()}
         >
-          <button
-            type="button"
-            aria-label="Shto në të preferuarat"
-            style={{
-              width: 36,
-              height: 36,
-              background: "rgba(15,13,11,0.85)",
-              border: "1px solid var(--border)",
-              color: "var(--text)",
-              display: "grid",
-              placeItems: "center",
-              backdropFilter: "blur(6px)",
-              cursor: "pointer",
-            }}
-            onClick={(e) => e.preventDefault()}
-          >
-            <Icon name="heart" />
-          </button>
-          <button
-            type="button"
-            aria-label="Shiko shpejt"
-            style={{
-              width: 36,
-              height: 36,
-              background: "rgba(15,13,11,0.85)",
-              border: "1px solid var(--border)",
-              color: "var(--text)",
-              display: "grid",
-              placeItems: "center",
-              backdropFilter: "blur(6px)",
-              cursor: "pointer",
-            }}
-            onClick={(e) => e.preventDefault()}
-          >
-            <Icon name="eye" />
-          </button>
-        </div>
-
-        {/* Hover add-to-cart bar — slides up from the bottom */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            padding: "14px 18px",
-            background: "rgba(15,13,11,0.92)",
-            backdropFilter: "blur(8px)",
-            color: "var(--text)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            fontSize: 12,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            transform: `translateY(${hover ? 0 : 100}%)`,
-            transition: "transform 0.3s ease",
-          }}
-        >
-          <span>Shto në shportë</span>
-          <Icon name="cart" />
+          {p.id ? (
+            <WishlistButton productId={p.id} initialWishlisted={isWishlisted} variant="card" />
+          ) : (
+            <button
+              type="button"
+              aria-label="Shto në të preferuarat"
+              style={{
+                width: 34,
+                height: 34,
+                background: "rgba(10,9,8,0.75)",
+                border: "1px solid var(--border)",
+                color: "var(--text-2)",
+                display: "grid",
+                placeItems: "center",
+                backdropFilter: "blur(6px)",
+                cursor: "pointer",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
-      <div
-        style={{
-          paddingTop: 16,
-          display: "flex",
-          flexDirection: "column",
-          gap: 6,
-        }}
-      >
+      {/* Info */}
+      <div style={{ padding: "16px 16px 18px" }}>
+        {/* Gold rule */}
         <div
           style={{
-            fontSize: 11,
-            letterSpacing: "0.16em",
+            height: 1,
+            width: hover ? 48 : 28,
+            background: "var(--gold-deep)",
+            marginBottom: 12,
+            transition: "width 0.35s ease",
+          }}
+        />
+
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.2em",
             textTransform: "uppercase",
             color: "var(--muted)",
+            marginBottom: 6,
           }}
         >
           {p.category}
         </div>
+
         <div
           className="serif"
-          style={{ fontSize: 22, color: "var(--text)" }}
+          style={{
+            fontSize: 20,
+            lineHeight: 1.15,
+            color: "var(--text)",
+            marginBottom: 10,
+          }}
         >
           {p.name}
         </div>
-        <div
-          style={{ display: "flex", alignItems: "baseline", gap: 10 }}
-        >
-          <span
-            style={{
-              color: "var(--gold)",
-              fontSize: 15,
-              letterSpacing: "0.02em",
-            }}
-          >
-            € {p.price}
-          </span>
-          {p.was && (
-            <span
-              style={{
-                color: "var(--muted-2)",
-                fontSize: 13,
-                textDecoration: "line-through",
-              }}
-            >
-              € {p.was}
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ color: "var(--gold)", fontSize: 14, letterSpacing: "0.04em" }}>
+              € {p.price.toFixed(2)}
             </span>
+            {p.was && (
+              <span style={{ color: "var(--muted-2)", fontSize: 12, textDecoration: "line-through" }}>
+                € {p.was.toFixed(2)}
+              </span>
+            )}
+          </div>
+
+          {/* Add to cart — always visible, stops link navigation */}
+          {p.id && (
+            <AddToCartButton productId={p.id} variant="icon" />
           )}
         </div>
       </div>

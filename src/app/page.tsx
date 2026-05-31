@@ -1,7 +1,8 @@
 import { Header } from "@/components/home/header";
 import { Hero } from "@/components/home/hero";
 import { CategoryStrip } from "@/components/home/category-strip";
-import { Featured } from "@/components/home/featured";
+import { ValuesStrip } from "@/components/home/values-strip";
+import { ShowroomCTA } from "@/components/home/showroom-cta";
 import { Footer } from "@/components/home/footer";
 
 export default function HomePage() {
@@ -12,7 +13,8 @@ export default function HomePage() {
         <Hero />
       </div>
       <CategoryStrip />
-      <Featured />
+      <ValuesStrip />
+      <ShowroomCTA />
       <Footer />
     </>
   );
