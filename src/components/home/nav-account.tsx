@@ -10,7 +10,7 @@ const UserIcon = () => (
   </svg>
 );
 
-export function NavAccount({ authed }: { authed: boolean }) {
+export function NavAccount({ authed, isAdmin = false }: { authed: boolean; isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -66,6 +66,7 @@ export function NavAccount({ authed }: { authed: boolean }) {
           }}
         >
           {[
+            ...(isAdmin ? [{ label: "Admin", href: "/admin" }] : []),
             { label: "Llogaria", href: "/account" },
             { label: "Porositë e mia", href: "/account/orders" },
             { label: "Lista e dëshirave", href: "/wishlist" },

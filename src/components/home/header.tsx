@@ -15,9 +15,11 @@ const NAV_LEFT = [
 ];
 
 export async function Header({ overlay = false }: { overlay?: boolean }) {
-  const user = hasSupabase()
-    ? (await (await createClient()).auth.getUser()).data.user
-    : null;
+  const supabase = hasSupabase() ? await createClient() : null;
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+  const isAdmin = user && supabase
+    ? (await supabase.from("profiles").select("role").eq("id", user.id).single()).data?.role === "admin"
+    : false;
   const cart = await getCart();
 
   return (
@@ -74,7 +76,7 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
           color: "var(--text-2)",
         }}
       >
-        <NavAccount authed={Boolean(user)} />
+        <NavAccount authed={Boolean(user)} isAdmin={Boolean(isAdmin)} />
 
         <Link
           href="/cart"
