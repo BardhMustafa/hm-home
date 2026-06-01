@@ -73,6 +73,86 @@ export default async function AccountPage() {
           </div>
         </div>
 
+        {/* Admin tiles */}
+        {profile?.role === "admin" && (
+          <div style={{ marginBottom: 32 }}>
+            <div className="eyebrow" style={{ marginBottom: 16, fontSize: 10 }}>Admin</div>
+            <div style={{ borderTop: "1px solid var(--border-soft)" }}>
+              <Link
+                href="/admin"
+                className="account-tile"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 18,
+                  padding: "22px 4px",
+                  borderBottom: "1px solid var(--border-soft)",
+                  textDecoration: "none",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: "var(--gold)" }}>
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span style={{ flex: 1, fontSize: 13, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+                  Paneli
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </Link>
+
+              <Link
+                href="/admin/orders"
+                className="account-tile"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 18,
+                  padding: "22px 4px",
+                  borderBottom: "1px solid var(--border-soft)",
+                  textDecoration: "none",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: "var(--gold)" }}>
+                  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                  <rect x="9" y="3" width="6" height="4" rx="1"/>
+                  <line x1="9" y1="12" x2="15" y2="12"/>
+                  <line x1="9" y1="16" x2="13" y2="16"/>
+                </svg>
+                <span style={{ flex: 1, fontSize: 13, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+                  Porositë
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </Link>
+
+              <Link
+                href="/admin/products"
+                className="account-tile"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 18,
+                  padding: "22px 4px",
+                  borderBottom: "1px solid var(--border-soft)",
+                  textDecoration: "none",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: "var(--gold)" }}>
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+                <span style={{ flex: 1, fontSize: 13, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+                  Produktet
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Action tiles */}
         <div style={{ borderTop: "1px solid var(--border-soft)" }}>
           {/* Orders */}
