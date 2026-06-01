@@ -174,22 +174,32 @@ function LowStockList({
   );
 }
 
+const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+  pending:    { label: "Në pritje",   color: "#d4960a" },
+  confirmed:  { label: "Konfirmuar", color: "#3b82f6" },
+  processing: { label: "Në proces",  color: "#8b5cf6" },
+  shipped:    { label: "Dërguar",    color: "#f59e0b" },
+  delivered:  { label: "Dorëzuar",   color: "#10b981" },
+  cancelled:  { label: "Anuluar",    color: "var(--muted)" },
+};
+
 function StatusPill({ status }: { status: string }) {
+  const meta = STATUS_LABEL[status] ?? { label: status, color: "var(--muted)" };
   return (
     <span
       style={{
         display: "inline-block",
         padding: "2px 8px",
         background: "var(--elevated)",
-        border: "1px solid var(--border)",
+        border: `1px solid ${meta.color}`,
         fontSize: 10,
         letterSpacing: "0.14em",
         textTransform: "uppercase",
-        color: "var(--text-2)",
+        color: meta.color,
         fontFamily: "var(--font-jetbrains)",
       }}
     >
-      {status}
+      {meta.label}
     </span>
   );
 }
