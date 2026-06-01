@@ -69,6 +69,7 @@ export async function getWishlistProducts(): Promise<ProductCardData[]> {
   if (!data) return [];
 
   return data.flatMap((row) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = row.product as any;
     if (!p) return [];
     const images: { image_url: string; position: number }[] = p.images ?? [];

@@ -113,7 +113,6 @@ export default async function MyOrdersPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {orders.map((o) => {
               const statusLabel = STATUS_LABEL[o.status] ?? o.status;
-              const isPending   = o.status === "pending";
               const isDelivered = o.status === "delivered";
               const isCancelled = o.status === "cancelled";
               const dotColor = isCancelled ? "var(--muted)" : isDelivered ? "#6dbf7e" : "var(--gold)";

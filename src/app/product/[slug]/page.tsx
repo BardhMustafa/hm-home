@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import Link from "next/link";
 import { notFound } from "next/navigation";
