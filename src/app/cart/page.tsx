@@ -1,14 +1,20 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getCart } from "@/lib/cart";
+import { createClient } from "@/lib/supabase/server";
+import { hasSupabase } from "@/lib/supabase/env";
 import { Header } from "@/components/home/header";
 import { Footer } from "@/components/home/footer";
-import { updateCartItemAction, removeCartItemAction } from "./actions";
+import { CartQtyControl } from "@/components/shop/cart-qty-control";
+import { CartRemoveButton } from "@/components/shop/cart-remove-button";
 
 export const metadata = { title: "Shporta — HM Home" };
 
 export default async function CartPage() {
   const cart = await getCart();
+  const user = hasSupabase()
+    ? (await (await createClient()).auth.getUser()).data.user
+    : null;
 
   return (
     <>
@@ -246,41 +252,11 @@ export default async function CartPage() {
                     >
                       {line.price.toFixed(2)} €
                     </div>
-                    <form
-                      action={updateCartItemAction.bind(null, line.cart_item_id)}
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
-                      <input
-                        type="number"
-                        name="quantity"
-                        defaultValue={line.quantity}
-                        min={1}
-                        max={line.stock ?? undefined}
-                        style={{
-                          width: 64,
-                          padding: "8px 10px",
-                          background: "var(--bg)",
-                          border: "1px solid var(--border)",
-                          color: "var(--text)",
-                          fontSize: 13,
-                        }}
-                      />
-                      <button
-                        type="submit"
-                        style={{
-                          fontSize: 11,
-                          letterSpacing: "0.16em",
-                          textTransform: "uppercase",
-                          color: "var(--gold)",
-                          background: "transparent",
-                          border: 0,
-                          cursor: "pointer",
-                          padding: 4,
-                        }}
-                      >
-                        Përditëso
-                      </button>
-                    </form>
+                    <CartQtyControl
+                      itemId={line.cart_item_id}
+                      quantity={line.quantity}
+                      stock={line.stock}
+                    />
                   </div>
 
                   <div
@@ -294,24 +270,7 @@ export default async function CartPage() {
                     <div className="serif" style={{ fontSize: 20, color: "var(--text)" }}>
                       {line.line_total.toFixed(2)} €
                     </div>
-                    <form
-                      action={removeCartItemAction.bind(null, line.cart_item_id)}
-                    >
-                      <button
-                        type="submit"
-                        style={{
-                          fontSize: 11,
-                          letterSpacing: "0.16em",
-                          textTransform: "uppercase",
-                          color: "var(--muted)",
-                          background: "transparent",
-                          border: 0,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Hiqe
-                      </button>
-                    </form>
+                    <CartRemoveButton itemId={line.cart_item_id} />
                   </div>
                 </div>
               ))}
@@ -370,6 +329,39 @@ export default async function CartPage() {
                   {cart.subtotal.toFixed(2)} €
                 </span>
               </div>
+              {!user && (
+                <div
+                  style={{
+                    marginBottom: 16,
+                    padding: "14px 16px",
+                    border: "1px solid var(--border)",
+                    background: "var(--bg)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                  }}
+                >
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
+                    Hyr ose regjistrohu për të ndjekur porosinë dhe historikun tuaj të blerjeve.
+                  </p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Link
+                      href="/auth/login"
+                      className="btn btn--ghost"
+                      style={{ flex: 1, justifyContent: "center", padding: "9px 0", fontSize: 11 }}
+                    >
+                      Hyr
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className="btn btn--solid"
+                      style={{ flex: 1, justifyContent: "center", padding: "9px 0", fontSize: 11 }}
+                    >
+                      Regjistrohu
+                    </Link>
+                  </div>
+                </div>
+              )}
               <Link
                 href="/checkout"
                 className="btn btn--solid"

@@ -168,7 +168,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
           </aside>
 
           {/* ══ PRODUCTS ═════════════════════════════════════════ */}
-          <div style={{ paddingLeft: "clamp(24px, 3vw, 48px)", minWidth: 0 }}>
+          <div className="shop-products" style={{ paddingLeft: "clamp(24px, 3vw, 48px)", minWidth: 0 }}>
 
             {/* Results bar */}
             <div

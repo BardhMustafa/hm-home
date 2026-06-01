@@ -42,54 +42,6 @@ export function Footer() {
         borderTop: "1px solid var(--border-soft)",
       }}
     >
-      {/* Top band — newsletter */}
-      <div
-        className="r-px"
-        style={{
-          paddingTop: "clamp(40px, 6vw, 64px)",
-          paddingBottom: "clamp(40px, 6vw, 64px)",
-          borderBottom: "1px solid var(--border-soft)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 32,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div className="eyebrow" style={{ marginBottom: 10 }}>Newsletter</div>
-          <p style={{ margin: 0, fontSize: 15, color: "var(--text-2)", maxWidth: 340, lineHeight: 1.5 }}>
-            Koleksionet e reja, oferta ekskluzive dhe inspirim dizajni — direkt në inbox.
-          </p>
-        </div>
-        <form
-          style={{ display: "flex", gap: 0, flexShrink: 0 }}
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <input
-            type="email"
-            placeholder="Email-i juaj"
-            style={{
-              padding: "13px 18px",
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRight: "none",
-              color: "var(--text)",
-              fontSize: 13,
-              outline: "none",
-              width: "clamp(180px, 20vw, 260px)",
-            }}
-          />
-          <button
-            type="submit"
-            className="btn btn--solid"
-            style={{ padding: "13px 24px", borderLeft: "none", fontSize: 11 }}
-          >
-            Regjistrohu
-          </button>
-        </form>
-      </div>
-
       {/* Main columns */}
       <div
         className="r-px r-grid-footer"

@@ -13,8 +13,7 @@ export async function addToCartAction(productId: string, qty = 1) {
   revalidatePath("/");
 }
 
-export async function updateCartItemAction(itemId: string, formData: FormData) {
-  const qty = Number(formData.get("quantity") ?? 1);
+export async function updateCartItemAction(itemId: string, qty: number) {
   await updateCartItemLib(itemId, qty);
   revalidatePath("/cart");
 }

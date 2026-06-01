@@ -8,10 +8,8 @@ import { Footer } from "@/components/home/footer";
 export default function HomePage() {
   return (
     <>
-      <div style={{ position: "relative" }}>
-        <Header overlay />
-        <Hero />
-      </div>
+      <Header overlay />
+      <Hero />
       <CategoryStrip />
       <ValuesStrip />
       <ShowroomCTA />

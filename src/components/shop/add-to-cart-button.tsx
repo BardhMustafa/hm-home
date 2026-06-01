@@ -54,7 +54,11 @@ export function AddToCartButton({
           transition: "background 0.2s, border-color 0.2s, color 0.2s",
         }}
       >
-        {done ? (
+        {pending ? (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ animation: "spin 0.7s linear infinite" }}>
+            <path d="M12 2a10 10 0 0 1 10 10" />
+          </svg>
+        ) : done ? (
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6L9 17l-5-5" />
           </svg>

@@ -38,43 +38,15 @@ export function ProductGallery({
   return (
     <>
       {/* ── Gallery ─────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          gap: 10,
-          position: "sticky",
-          top: 24,
-          alignSelf: "flex-start",
-        }}
-      >
-        {/* Thumbnail strip — left side */}
+      <div className="product-gallery-wrapper">
+        {/* Thumbnail strip */}
         {images.length > 1 && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              width: 72,
-              flexShrink: 0,
-            }}
-          >
+          <div className="gallery-thumbs">
             {images.map((img, i) => (
               <div
                 key={img.image_url}
                 onClick={() => setActive(i)}
-                style={{
-                  position: "relative",
-                  width: 72,
-                  height: 72,
-                  flexShrink: 0,
-                  background: "var(--surface)",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  outline: i === active ? "2px solid var(--gold)" : "2px solid transparent",
-                  outlineOffset: 2,
-                  transition: "outline-color 0.15s",
-                }}
+                className={`gallery-thumb${i === active ? " active" : ""}`}
               >
                 <Image
                   src={img.image_url}
@@ -95,16 +67,8 @@ export function ProductGallery({
 
         {/* Main image */}
         <div
+          className="gallery-main"
           onClick={() => current && setLightbox(active)}
-          style={{
-            position: "relative",
-            flex: 1,
-            aspectRatio: "4 / 3",
-            background: "var(--surface)",
-            overflow: "hidden",
-            cursor: current ? "zoom-in" : "default",
-            minWidth: 0,
-          }}
         >
           {current ? (
             <Image
@@ -121,29 +85,6 @@ export function ProductGallery({
               data-label="product"
               style={{ position: "absolute", inset: 0 }}
             />
-          )}
-          {current && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 10,
-                right: 12,
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 10,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "var(--muted)",
-                pointerEvents: "none",
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35M11 8v6M8 11h6" />
-              </svg>
-              Zmadhoni
-            </div>
           )}
         </div>
       </div>

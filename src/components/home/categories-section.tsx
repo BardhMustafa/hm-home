@@ -62,7 +62,7 @@ export function CategoriesSection({
       const dt = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
 
-      current += (target - current) * (1 - Math.exp(-3.5 * dt));
+      current += (target - current) * (1 - Math.exp(-2.2 * dt));
       if (Math.abs(target - current) < 0.0001) current = target;
 
       const maxX = (N - 1) * window.innerWidth;
@@ -347,7 +347,6 @@ export function CategoriesSection({
                 height: 1,
                 width: "0%",
                 background: "var(--gold)",
-                transition: "width 0.12s linear",
               }}
             />
           </div>
