@@ -714,3 +714,15 @@ img, video { max-width: 100%; height: auto; }
 .account-tile--muted:hover { color: var(--text-2); }
 .order-row { border-left: 2px solid transparent; transition: border-color 0.2s; }
 .order-row:hover { border-left-color: var(--gold-deep); }
+
+/* Prevent iOS Safari from auto-zooming when a form field is focused. Safari
+   zooms whenever an input's font-size is below 16px, so on touch-sized screens
+   we force every text-entry control to 16px. Desktop keeps its original sizes.
+   !important is needed because several inputs set their size via inline styles. */
+@media (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
