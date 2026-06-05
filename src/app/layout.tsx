@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bodoni_Moda, Inter, DM_Mono } from "next/font/google";
+import { Lora, Plus_Jakarta_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ScrollToTop } from "@/components/scroll-to-top";
@@ -11,14 +11,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
-const bodoni = Bodoni_Moda({
+const lora = Lora({
   variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -54,7 +54,7 @@ export default function RootLayout({
   return (
     <html lang="sq" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${bodoni.variable} ${dmMono.variable} antialiased`}
+        className={`${jakarta.variable} ${lora.variable} ${dmMono.variable} antialiased`}
       >
         <NavProgress />
         <ScrollToTop />
