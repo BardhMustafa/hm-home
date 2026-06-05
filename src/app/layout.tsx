@@ -5,10 +5,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { NavProgress } from "@/components/nav-progress";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hmhome.al";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#0a0908",
+  colorScheme: "dark",
 };
 
 const jakarta = Plus_Jakarta_Sans({
@@ -34,15 +38,38 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HM Home — Mobilje me stil",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "HM Home — Mobilje me stil",
+    template: "%s — HM Home",
+  },
   description:
     "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane. Komoditet i pakrahasueshëm, dizajn që zgjat një jetë.",
+  applicationName: "HM Home",
+  keywords: [
+    "mobilje",
+    "HM Home",
+    "divan",
+    "kanape",
+    "dekore",
+    "mobilje me stil",
+    "Kosovë",
+    "Shqipëri",
+  ],
   openGraph: {
     title: "HM Home — Mobilje me stil",
     description:
       "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane.",
+    url: SITE_URL,
+    siteName: "HM Home",
     type: "website",
     locale: "sq_AL",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HM Home — Mobilje me stil",
+    description:
+      "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane.",
   },
 };
 
