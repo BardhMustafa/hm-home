@@ -16,8 +16,8 @@ export async function toggleWishlist(
   productId: string,
 ): Promise<{ wishlisted: boolean }> {
   const userId = await getCurrentUserId();
-  if (!userId)
-    throw new Error("Duhet të jeni i kyçur për të shtuar në të preferuara.");
+  // Signalled to the UI so it can show a clear "log in" prompt.
+  if (!userId) throw new Error("AUTH_REQUIRED");
 
   const admin = createAdminClient();
   const { data: existing } = await admin

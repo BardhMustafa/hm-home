@@ -40,12 +40,16 @@ export function WishlistButton({
     e.preventDefault();
     startTransition(async () => {
       const result = await toggleWishlistAction(productId);
-      if (!result.error) {
-        setWishlisted(result.wishlisted);
-        toast(result.wishlisted ? "U shtua në të preferuarat" : "U hoq nga të preferuarat");
-      } else {
-        toast("Ndodhi një gabim", "error");
+      if (result.requiresAuth) {
+        toast("Kyçuni për të ruajtur të preferuarat", "error");
+        return;
       }
+      if (result.error) {
+        toast("Ndodhi një gabim", "error");
+        return;
+      }
+      setWishlisted(result.wishlisted);
+      toast(result.wishlisted ? "U shtua në të preferuarat" : "U hoq nga të preferuarat");
     });
   }
 

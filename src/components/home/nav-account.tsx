@@ -34,8 +34,32 @@ export function NavAccount({ authed, isAdmin = false }: { authed: boolean; isAdm
 
   if (!authed) {
     return (
-      <Link href="/auth/login" style={{ color: "inherit", display: "flex", alignItems: "center" }} aria-label="Hyr">
-        <UserIcon />
+      <Link
+        href="/auth/login"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 7,
+          padding: "8px 16px",
+          border: "1px solid var(--border)",
+          color: "var(--text-2)",
+          textDecoration: "none",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+          transition: "color 0.2s, border-color 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = "var(--gold)";
+          e.currentTarget.style.borderColor = "var(--gold)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = "var(--text-2)";
+          e.currentTarget.style.borderColor = "var(--border)";
+        }}
+      >
+        Hyr
       </Link>
     );
   }
