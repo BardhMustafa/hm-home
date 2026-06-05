@@ -25,6 +25,9 @@ export function Hero() {
     const content  = contentRef.current;
     if (!hero || !parallax || !content) return;
 
+    // Respect users who asked for reduced motion — skip the parallax/fade.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     function onScroll() {
       const y = window.scrollY;
       const h = hero!.offsetHeight;

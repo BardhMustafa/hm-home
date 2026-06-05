@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/supabase/env";
+import { hasGuestOrderAccess } from "@/lib/order-access";
 import { Header } from "@/components/home/header";
 import { Footer } from "@/components/home/footer";
 
@@ -14,19 +15,26 @@ export default async function CheckoutSuccessPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [admin, user] = [
-    createAdminClient(),
-    hasSupabase()
-      ? (await (await createClient()).auth.getUser()).data.user
-      : null,
-  ];
+  const user = hasSupabase()
+    ? (await (await createClient()).auth.getUser()).data.user
+    : null;
+
+  const admin = createAdminClient();
   const { data: order } = await admin
     .from("orders")
-    .select("id, full_name, total, status, city, address, created_at")
+    .select("id, user_id, full_name, total, status, city, address, created_at")
     .eq("id", id)
     .maybeSingle();
 
   if (!order) notFound();
+
+  // This page renders PII (name, address) and is addressable by id, so gate
+  // access: the authenticated buyer who owns the order, or a guest whose
+  // browser placed it (tracked in the hm_orders cookie). Anyone else gets a
+  // 404 — no existence leak.
+  const authedOwns = Boolean(user && order.user_id === user.id);
+  const guestOwns = await hasGuestOrderAccess(order.id);
+  if (!authedOwns && !guestOwns) notFound();
 
   return (
     <>
@@ -97,7 +105,7 @@ export default async function CheckoutSuccessPage({
             <span className="eyebrow" style={{ fontSize: 10 }}>Detajet e porosisë</span>
             <span
               style={{
-                fontFamily: "var(--font-jetbrains)",
+                fontFamily: "var(--font-mono)",
                 fontSize: 11,
                 color: "var(--gold)",
                 letterSpacing: "0.08em",

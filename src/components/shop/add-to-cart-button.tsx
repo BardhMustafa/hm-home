@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addToCartAction } from "@/app/cart/actions";
 import { toast } from "@/lib/toast";
@@ -19,17 +19,26 @@ export function AddToCartButton({
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
   const router = useRouter();
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(resetTimer.current), []);
 
   function handleClick(e?: React.MouseEvent) {
     e?.preventDefault();
     e?.stopPropagation();
     if (disabled || pending || done) return;
     startTransition(async () => {
-      await addToCartAction(productId, 1);
+      try {
+        await addToCartAction(productId, 1);
+      } catch {
+        toast("Nuk u shtua në shportë. Provoni përsëri.");
+        return;
+      }
+      // Only confirm on a successful add.
       setDone(true);
       toast("U shtua në shportë");
       router.refresh();
-      setTimeout(() => setDone(false), 1800);
+      resetTimer.current = setTimeout(() => setDone(false), 1800);
     });
   }
 

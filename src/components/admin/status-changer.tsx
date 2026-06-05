@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { updateOrderStatus } from "@/app/admin/orders/actions";
 import { STATUS_META } from "./orders-filter";
 
@@ -21,12 +21,22 @@ export function StatusChanger({
   current: string;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function change(status: string) {
     if (status === current) return;
-    const fd = new FormData();
-    fd.set("status", status);
-    startTransition(() => updateOrderStatus(orderId, fd));
+    setError(null);
+    startTransition(async () => {
+      try {
+        const fd = new FormData();
+        fd.set("status", status);
+        await updateOrderStatus(orderId, fd);
+      } catch {
+        // Surface the failure instead of letting it bubble to an error
+        // boundary (which would blank the page) or silently no-op.
+        setError("Përditësimi i statusit dështoi. Provoni përsëri.");
+      }
+    });
   }
 
   return (
@@ -75,7 +85,7 @@ export function StatusChanger({
                 fontSize: 10,
                 letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                fontFamily: "var(--font-jetbrains), ui-monospace, monospace",
+                fontFamily: "var(--font-mono), ui-monospace, monospace",
                 background: active ? meta.bg : "transparent",
                 color: active ? meta.color : "var(--muted)",
                 border: `1px solid ${active ? meta.color : "var(--border)"}`,
@@ -100,7 +110,7 @@ export function StatusChanger({
           fontSize: 10,
           letterSpacing: "0.16em",
           textTransform: "uppercase",
-          fontFamily: "var(--font-jetbrains), ui-monospace, monospace",
+          fontFamily: "var(--font-mono), ui-monospace, monospace",
           background: current === "cancelled" ? "rgba(239,68,68,0.12)" : "transparent",
           color: current === "cancelled" ? "#ef4444" : "var(--muted-2)",
           border: `1px solid ${current === "cancelled" ? "#ef4444" : "var(--border)"}`,
@@ -113,6 +123,10 @@ export function StatusChanger({
       >
         {STATUS_META.cancelled.label}
       </button>
+
+      {error && (
+        <div style={{ color: "#ef4444", fontSize: 12 }}>{error}</div>
+      )}
     </div>
   );
 }

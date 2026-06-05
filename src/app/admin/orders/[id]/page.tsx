@@ -238,7 +238,7 @@ function DetailRow({
           style={{
             color: "var(--text)",
             textAlign: "right",
-            fontFamily: mono ? "var(--font-jetbrains), ui-monospace, monospace" : undefined,
+            fontFamily: mono ? "var(--font-mono), ui-monospace, monospace" : undefined,
             fontSize: mono ? 11 : 13,
           }}
         >

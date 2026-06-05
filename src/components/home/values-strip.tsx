@@ -15,6 +15,13 @@ export function ValuesStrip() {
     const el = sectionRef.current;
     if (!el) return;
 
+    // Reduced motion: render the final state immediately, no scroll animation.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+      return;
+    }
+
     el.style.opacity = "0";
     el.style.transform = "translateY(56px)";
     el.style.willChange = "transform, opacity";

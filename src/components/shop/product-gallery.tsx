@@ -45,7 +45,17 @@ export function ProductGallery({
             {images.map((img, i) => (
               <div
                 key={img.image_url}
+                role="button"
+                tabIndex={0}
+                aria-label={`Shfaq imazhin ${i + 1}`}
+                aria-current={i === active}
                 onClick={() => setActive(i)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActive(i);
+                  }
+                }}
                 className={`gallery-thumb${i === active ? " active" : ""}`}
               >
                 <Image
@@ -68,7 +78,16 @@ export function ProductGallery({
         {/* Main image */}
         <div
           className="gallery-main"
+          role="button"
+          tabIndex={current ? 0 : -1}
+          aria-label="Zmadho imazhin"
           onClick={() => current && setLightbox(active)}
+          onKeyDown={(e) => {
+            if (current && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              setLightbox(active);
+            }
+          }}
         >
           {current ? (
             <Image
@@ -105,6 +124,7 @@ export function ProductGallery({
         >
           <button
             onClick={() => setLightbox(null)}
+            aria-label="Mbyll"
             style={{
               position: "absolute",
               top: 20,
@@ -126,6 +146,7 @@ export function ProductGallery({
           {lightbox > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); setLightbox(lightbox - 1); }}
+              aria-label="Imazhi i mëparshëm"
               style={{
                 position: "absolute",
                 left: 20,
@@ -164,6 +185,7 @@ export function ProductGallery({
           {lightbox < images.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); setLightbox(lightbox + 1); }}
+              aria-label="Imazhi tjetër"
               style={{
                 position: "absolute",
                 right: 20,

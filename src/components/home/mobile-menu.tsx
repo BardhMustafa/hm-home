@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Wordmark } from "./wordmark";
@@ -23,6 +23,8 @@ export function MobileMenuButton({
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Only portal after hydration so SSR doesn't break
   useEffect(() => { setMounted(true); }, []);
@@ -31,6 +33,49 @@ export function MobileMenuButton({
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  // Modal a11y while open: focus the drawer, trap Tab inside it, close on
+  // Escape, and return focus to the hamburger when it closes.
+  useEffect(() => {
+    if (!open) return;
+    const drawer = drawerRef.current;
+    const trigger = triggerRef.current;
+    const focusables = () =>
+      drawer
+        ? Array.from(
+            drawer.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            ),
+          )
+        : [];
+    focusables()[0]?.focus();
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+        return;
+      }
+      if (e.key === "Tab") {
+        const items = focusables();
+        if (items.length === 0) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      trigger?.focus();
+    };
   }, [open]);
 
   function close() { setOpen(false); }
@@ -65,6 +110,13 @@ export function MobileMenuButton({
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menyja"
+        // When closed, take the drawer out of the tab order + a11y tree so the
+        // hidden links can't be focused or read by screen readers.
+        {...(open ? {} : { inert: true })}
         style={{
           position: "fixed",
           top: 0,
@@ -196,6 +248,7 @@ export function MobileMenuButton({
     <>
       {/* Hamburger button */}
       <button
+        ref={triggerRef}
         className="r-hamburger"
         aria-label={open ? "Mbyll menynë" : "Hap menynë"}
         aria-expanded={open}

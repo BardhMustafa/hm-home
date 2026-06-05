@@ -15,6 +15,8 @@ export type ProductCardData = {
   was?: number | null;
   badge?: "new" | "sale" | null;
   image?: string | null;
+  // null = made-to-order (always orderable); 0 = sold out; >0 = in stock.
+  stock?: number | null;
 };
 
 export function ProductCard({
@@ -161,9 +163,15 @@ export function ProductCard({
             )}
           </div>
 
-          {/* Add to cart — always visible, stops link navigation */}
+          {/* Add to cart — always visible, stops link navigation.
+              Disabled when sold out (stock === 0); made-to-order (null) is
+              orderable. */}
           {p.id && (
-            <AddToCartButton productId={p.id} variant="icon" />
+            <AddToCartButton
+              productId={p.id}
+              variant="icon"
+              disabled={p.stock === 0}
+            />
           )}
         </div>
       </div>

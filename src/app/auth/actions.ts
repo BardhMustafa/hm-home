@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { mergeGuestCartOnLogin } from "@/lib/cart";
+import { safeNextPath } from "@/lib/safe-redirect";
 
 export type AuthState = { error?: string } | undefined;
 
@@ -14,7 +15,7 @@ export async function login(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const next = String(formData.get("next") ?? "/account");
+  const next = safeNextPath(formData.get("next"));
 
   if (!email || !password) return { error: "Plotëso email-in dhe fjalëkalimin." };
 

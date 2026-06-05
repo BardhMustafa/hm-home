@@ -6,9 +6,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCart, clearCart } from "@/lib/cart";
-
-const SHIPPING_FLAT = 0; // free shipping placeholder
+import { getCart } from "@/lib/cart";
+import { grantOrderAccess } from "@/lib/order-access";
 
 const checkoutSchema = z.object({
   full_name: z.string().trim().min(2),
@@ -48,108 +47,61 @@ export async function placeOrder(
     };
   }
 
-  // Pull the current cart server-side so we never trust prices/quantities
-  // from the form.
+  // Resolve the cart server-side; never trust prices/quantities from the form.
   const cart = await getCart();
   if (!cart.cartId || cart.lines.length === 0) {
     return { error: "Shporta juaj është bosh." };
   }
 
-  const admin = createAdminClient();
+  const idempotencyKey =
+    String(formData.get("idempotency_key") ?? "").trim() || null;
 
-  // Re-validate stock + prices against the live products table. If a price
-  // moved or stock dropped between cart-add and checkout, refuse the order
-  // and let the user re-confirm.
-  const productIds = cart.lines.map((l) => l.product_id);
-  const { data: live } = await admin
-    .from("products")
-    .select("id, price, discount_price, stock, name")
-    .in("id", productIds);
-  const byId = new Map((live ?? []).map((p) => [p.id, p]));
-
-  for (const line of cart.lines) {
-    const p = byId.get(line.product_id);
-    if (!p) return { error: `${line.name} nuk është më në dispozicion.` };
-    if (p.stock !== null && p.stock < line.quantity) {
-      return {
-        error: `Stoku i pamjaftueshëm për ${p.name} (mbeten ${p.stock}).`,
-      };
-    }
-    const livePrice =
-      typeof p.discount_price === "number" && p.discount_price < Number(p.price)
-        ? Number(p.discount_price)
-        : Number(p.price);
-    if (livePrice !== line.price) {
-      return {
-        error: `Çmimi i ${p.name} ka ndryshuar. Rifresko shportën.`,
-      };
-    }
-  }
-
-  const subtotal = cart.lines.reduce((s, l) => s + l.line_total, 0);
-  const total = subtotal + SHIPPING_FLAT;
-
-  // Resolve the auth user (if any) so we set user_id rather than just
-  // guest_email when an authed user checks out.
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: order, error: orderError } = await admin
-    .from("orders")
-    .insert({
-      user_id: user?.id ?? null,
-      guest_email: user ? null : parsed.data.email,
-      status: "pending",
-      subtotal,
-      shipping_cost: SHIPPING_FLAT,
-      total,
-      full_name: parsed.data.full_name,
-      phone: parsed.data.phone,
-      country: parsed.data.country,
-      city: parsed.data.city,
-      address: parsed.data.address,
-      postal_code: parsed.data.postal_code,
-      notes: parsed.data.notes,
-    })
-    .select("id")
-    .single();
-  if (orderError) return { error: orderError.message };
+  // Atomic, transactional placement: stock is decremented under a row lock,
+  // prices are taken live, and the cart is cleared — all or nothing. The
+  // idempotency key makes a double-submit return the same order instead of
+  // creating a second one. See supabase/migrations/0004_audit_fixes.sql.
+  const admin = createAdminClient();
+  const { data: orderId, error } = await admin.rpc("place_order", {
+    p_cart_id: cart.cartId,
+    p_user_id: user?.id ?? null,
+    p_guest_email: user ? null : parsed.data.email,
+    p_full_name: parsed.data.full_name,
+    p_phone: parsed.data.phone,
+    p_country: parsed.data.country,
+    p_city: parsed.data.city,
+    p_address: parsed.data.address,
+    p_postal_code: parsed.data.postal_code,
+    p_notes: parsed.data.notes,
+    p_idempotency_key: idempotencyKey,
+  });
 
-  const { error: itemsError } = await admin.from("order_items").insert(
-    cart.lines.map((l) => ({
-      order_id: order.id,
-      product_id: l.product_id,
-      product_name: l.name,
-      price: l.price,
-      quantity: l.quantity,
-    })),
-  );
-  if (itemsError) {
-    // Best-effort rollback. Without a transactional client this leaves a
-    // potentially-empty order row — admins can clean those up.
-    await admin.from("orders").delete().eq("id", order.id);
-    return { error: itemsError.message };
-  }
-
-  // Decrement stock. Sequential to keep each update's read-modify-write
-  // consistent; small line counts mean this is cheap. For true atomicity
-  // we'd push this into a SQL function.
-  for (const line of cart.lines) {
-    const p = byId.get(line.product_id)!;
-    if (p.stock !== null) {
-      await admin
-        .from("products")
-        .update({ stock: p.stock - line.quantity })
-        .eq("id", line.product_id);
+  if (error) {
+    const msg = error.message ?? "";
+    if (msg.includes("OUT_OF_STOCK")) {
+      const name = msg.split("OUT_OF_STOCK:")[1]?.trim();
+      return {
+        error: name
+          ? `Stoku i pamjaftueshëm për ${name}. Rifresko shportën.`
+          : "Stok i pamjaftueshëm. Rifresko shportën.",
+      };
     }
+    if (msg.includes("CART_EMPTY") || msg.includes("CART_NOT_FOUND")) {
+      return { error: "Shporta juaj është bosh." };
+    }
+    return { error: "Porosia dështoi. Provoni përsëri." };
   }
+  if (!orderId) return { error: "Porosia dështoi. Provoni përsëri." };
 
-  await clearCart(cart.cartId);
+  // Let this browser view the receipt without exposing it to others.
+  await grantOrderAccess(orderId as string);
 
   // TODO: send order confirmation email via Resend.
 
   revalidatePath("/", "layout");
-  redirect(`/checkout/success/${order.id}`);
+  redirect(`/checkout/success/${orderId}`);
 }

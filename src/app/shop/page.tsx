@@ -32,12 +32,20 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     ? (await (await createClient()).from("categories").select("name, slug").order("name")).data
     : null;
 
+  // Coerce price params defensively: a crafted ?min=abc must not leak NaN
+  // into the filter.
+  const priceParam = (v?: string) => {
+    if (!v) return undefined;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : undefined;
+  };
+
   const [products, wishlistedIds] = await Promise.all([
     getShopProducts({
       category: sp.cat,
       sort:     sp.sort ?? "newest",
-      minPrice: sp.min ? Number(sp.min) : undefined,
-      maxPrice: sp.max ? Number(sp.max) : undefined,
+      minPrice: priceParam(sp.min),
+      maxPrice: priceParam(sp.max),
       onSale:   sp.sale === "1",
     }),
     getWishlistedIds(),

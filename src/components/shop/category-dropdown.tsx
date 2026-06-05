@@ -22,14 +22,22 @@ export function CategoryDropdown({
   const all = [{ name: "Të gjitha", slug: "" }, ...categories];
   const selected = all.find((c) => c.slug === activeCat) ?? all[0];
 
-  // Close on outside click
+  // Close on outside click or Escape (only while open).
   useEffect(() => {
+    if (!open) return;
     function handle(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, []);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", handle);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   function select(slug: string) {
     setOpen(false);
@@ -49,6 +57,7 @@ export function CategoryDropdown({
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="shop-dd-trigger"
+        aria-haspopup="listbox"
         aria-expanded={open}
         disabled={pending}
         style={{ opacity: pending ? 0.6 : 1 }}

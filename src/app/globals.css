@@ -90,7 +90,7 @@ body {
   letter-spacing: 0;
 }
 .mono {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-weight: 400;
 }
 .eyebrow {

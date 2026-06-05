@@ -85,6 +85,7 @@ export async function getWishlistProducts(): Promise<ProductCardData[]> {
       was: hasDiscount ? Number(p.price) : null,
       badge: hasDiscount ? "sale" : null,
       image: first?.image_url ?? null,
+      stock: p.stock ?? null,
     } satisfies ProductCardData];
   });
 }

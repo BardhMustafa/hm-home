@@ -10,11 +10,13 @@ function NavProgressInner() {
   const [width, setWidth] = useState(0);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const safetyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Route changed → complete & fade out
   useEffect(() => {
     clearTimeout(slowTimer.current);
     clearTimeout(hideTimer.current);
+    clearTimeout(safetyTimer.current);
     setWidth(100);
     hideTimer.current = setTimeout(() => {
       setVisible(false);
@@ -29,17 +31,33 @@ function NavProgressInner() {
       if (!anchor) return;
       const href = anchor.getAttribute("href") ?? "";
       if (!href || href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+      // Same URL as now → no navigation happens, so don't start a bar that
+      // would never be completed by the route-change effect (it'd stick).
+      const target = new URL(href, window.location.href);
+      if (
+        target.pathname === window.location.pathname &&
+        target.search === window.location.search
+      ) {
+        return;
+      }
       clearTimeout(slowTimer.current);
       clearTimeout(hideTimer.current);
+      clearTimeout(safetyTimer.current);
       setVisible(true);
       setWidth(35);
       slowTimer.current = setTimeout(() => setWidth(65), 600);
+      // Failsafe: if navigation never completes (blocked, error), auto-hide.
+      safetyTimer.current = setTimeout(() => {
+        setVisible(false);
+        setWidth(0);
+      }, 8000);
     }
     document.addEventListener("click", onLinkClick);
     return () => {
       document.removeEventListener("click", onLinkClick);
       clearTimeout(slowTimer.current);
       clearTimeout(hideTimer.current);
+      clearTimeout(safetyTimer.current);
     };
   }, []);
 

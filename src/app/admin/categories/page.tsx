@@ -88,7 +88,7 @@ export default async function CategoriesPage() {
                   style={{
                     fontSize: 11,
                     color: "var(--muted)",
-                    fontFamily: "var(--font-jetbrains)",
+                    fontFamily: "var(--font-mono)",
                   }}
                 >
                   /{c.slug}

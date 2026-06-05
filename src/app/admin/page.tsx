@@ -163,7 +163,7 @@ function LowStockList({
           <span
             style={{
               color: p.stock === 0 ? "var(--sale)" : "var(--gold)",
-              fontFamily: "var(--font-jetbrains)",
+              fontFamily: "var(--font-mono)",
             }}
           >
             {p.stock}
@@ -196,7 +196,7 @@ function StatusPill({ status }: { status: string }) {
         letterSpacing: "0.14em",
         textTransform: "uppercase",
         color: meta.color,
-        fontFamily: "var(--font-jetbrains)",
+        fontFamily: "var(--font-mono)",
       }}
     >
       {meta.label}

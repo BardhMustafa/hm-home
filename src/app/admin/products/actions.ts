@@ -8,22 +8,30 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/slug";
+import { uniqueSlug } from "@/lib/unique-slug";
 
 const PRODUCT_BUCKET = "product-images";
 
-const productSchema = z.object({
-  name: z.string().trim().min(2, "Emri është i detyrueshëm."),
-  slug: z.string().trim().min(2, "Slug-u është i detyrueshëm."),
-  description: z.string().trim().optional().nullable(),
-  price: z.coerce.number().min(0, "Çmimi nuk mund të jetë negativ."),
-  discount_price: z.coerce.number().min(0).optional().nullable(),
-  stock: z.preprocess(
-    (v) => (v === "" || v === null || v === undefined ? null : v),
-    z.coerce.number().int().min(0, "Stoku nuk mund të jetë negativ.").nullable(),
-  ),
-  featured: z.coerce.boolean().optional().default(false),
-  category_id: z.string().uuid().optional().nullable(),
-});
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB per image
+
+const productSchema = z
+  .object({
+    name: z.string().trim().min(2, "Emri është i detyrueshëm."),
+    slug: z.string().trim().min(2, "Slug-u është i detyrueshëm."),
+    description: z.string().trim().optional().nullable(),
+    price: z.coerce.number().min(0, "Çmimi nuk mund të jetë negativ."),
+    discount_price: z.coerce.number().min(0).optional().nullable(),
+    stock: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? null : v),
+      z.coerce.number().int().min(0, "Stoku nuk mund të jetë negativ.").nullable(),
+    ),
+    featured: z.coerce.boolean().optional().default(false),
+    category_id: z.string().uuid().optional().nullable(),
+  })
+  .refine((d) => d.discount_price == null || d.discount_price < d.price, {
+    message: "Zbritja duhet të jetë më e vogël se çmimi.",
+    path: ["discount_price"],
+  });
 
 export type ProductFormState = {
   error?: string;
@@ -78,6 +86,12 @@ async function uploadProductImage(
   file: File,
   position: number,
 ) {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Skedari duhet të jetë imazh.");
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error("Imazhi është shumë i madh (max 8MB).");
+  }
   const buf = Buffer.from(await file.arrayBuffer());
   const webp = await sharp(buf)
     .rotate() // honor EXIF orientation
@@ -122,9 +136,10 @@ export async function createProduct(
   }
 
   const admin = createAdminClient();
+  const slug = await uniqueSlug(admin, "products", parsed.data.slug);
   const { data: inserted, error: insertError } = await admin
     .from("products")
-    .insert(parsed.data)
+    .insert({ ...parsed.data, slug })
     .select("id")
     .single();
   if (insertError) {
@@ -149,6 +164,7 @@ export async function createProduct(
   }
 
   revalidatePath("/admin/products");
+  revalidatePath("/shop");
   revalidatePath("/");
   redirect(`/admin/products/${inserted.id}`);
 }
@@ -171,9 +187,10 @@ export async function updateProduct(
   }
 
   const admin = createAdminClient();
+  const slug = await uniqueSlug(admin, "products", parsed.data.slug, id);
   const { error: updateError } = await admin
     .from("products")
-    .update(parsed.data)
+    .update({ ...parsed.data, slug })
     .eq("id", id);
   if (updateError) return { error: updateError.message };
 
@@ -201,28 +218,44 @@ export async function updateProduct(
 
   revalidatePath("/admin/products");
   revalidatePath(`/admin/products/${id}`);
+  revalidatePath(`/product/${slug}`);
+  revalidatePath("/shop");
   revalidatePath("/");
   return undefined;
 }
 
-export async function deleteProduct(id: string) {
+export async function deleteProduct(
+  id: string,
+): Promise<{ error?: string } | void> {
   await assertAdmin();
   const admin = createAdminClient();
 
-  // Pull every storage path so we can delete the files alongside the row.
+  // Pull storage paths before the row (and its product_images, via cascade)
+  // disappear — but don't delete the files until the row delete succeeds.
   const { data: imgs } = await admin
     .from("product_images")
     .select("storage_path")
     .eq("product_id", id);
+
+  // Remove the product from any active carts first: cart_items.product_id is
+  // a restrict FK, so it would otherwise block the delete. order_items keeps
+  // its snapshot (FK is ON DELETE SET NULL per migration 0004), so order
+  // history is preserved.
+  await admin.from("cart_items").delete().eq("product_id", id);
+
+  const { error } = await admin.from("products").delete().eq("id", id);
+  if (error) {
+    return { error: `Produkti nuk u fshi: ${error.message}` };
+  }
+
   if (imgs?.length) {
     await admin.storage
       .from(PRODUCT_BUCKET)
       .remove(imgs.map((i) => i.storage_path));
   }
 
-  await admin.from("products").delete().eq("id", id);
-
   revalidatePath("/admin/products");
+  revalidatePath("/shop");
   revalidatePath("/");
   redirect("/admin/products");
 }

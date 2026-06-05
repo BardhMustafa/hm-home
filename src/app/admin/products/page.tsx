@@ -2,17 +2,32 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
 
 export const metadata = { title: "Produktet — Admin" };
 
-export default async function AdminProductsPage() {
+const PAGE_SIZE = 50;
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
-  const { data: raw } = await supabase
+  const { data: raw, count } = await supabase
     .from("products")
     .select(
       "id, name, slug, price, discount_price, stock, featured, category:categories(name), images:product_images(image_url, position)",
+      { count: "exact" },
     )
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   // Supabase's PostgREST returns nested FK relations as arrays by default
   // even for single-row to-one joins; flatten to a single object.
@@ -127,7 +142,7 @@ export default async function AdminProductsPage() {
                   <Td
                     style={{
                       color: p.stock === 0 ? "var(--sale)" : "var(--text)",
-                      fontFamily: "var(--font-jetbrains)",
+                      fontFamily: "var(--font-mono)",
                     }}
                   >
                     {p.stock ?? "∞"}
@@ -153,6 +168,12 @@ export default async function AdminProductsPage() {
           </tbody>
         </table>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        pathname="/admin/products"
+      />
     </>
   );
 }

@@ -21,8 +21,15 @@ export function NavAccount({ authed, isAdmin = false }: { authed: boolean; isAdm
         setOpen(false);
       }
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   if (!authed) {
@@ -38,6 +45,8 @@ export function NavAccount({ authed, isAdmin = false }: { authed: boolean; isAdm
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label="Llogaria"
+        aria-haspopup="menu"
+        aria-expanded={open}
         style={{
           background: "none",
           border: "none",

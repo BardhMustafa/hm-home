@@ -176,7 +176,7 @@ const inputStyle: React.CSSProperties = {
   background: "var(--bg)",
   border: "1px solid var(--border)",
   color: "var(--text)",
-  fontFamily: "var(--font-outfit), system-ui, sans-serif",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
   fontSize: 14,
   outline: "none",
 };

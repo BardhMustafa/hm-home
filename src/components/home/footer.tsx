@@ -27,7 +27,7 @@ const NAV = [
     h: "Kontakt",
     links: [
       { label: "Rr. Sami Frashëri 14, Tiranë", href: "#" },
-      { label: "+355 69 200 1234", href: "tel:+35569200 1234" },
+      { label: "+355 69 200 1234", href: "tel:+355692001234" },
       { label: "hello@hmhome.al", href: "mailto:hello@hmhome.al" },
       { label: "Hënë – Shtunë, 9 – 20", href: "#" },
     ],

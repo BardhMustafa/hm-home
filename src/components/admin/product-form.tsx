@@ -423,7 +423,12 @@ function ImageThumb({
   async function remove() {
     if (!confirm("Të fshihet ky imazh?")) return;
     setRemoving(true);
-    await deleteProductImage(img.id, productId);
+    try {
+      await deleteProductImage(img.id, productId);
+    } catch {
+      setRemoving(false);
+      alert("Fshirja e imazhit dështoi. Provoni përsëri.");
+    }
   }
 
   return (
@@ -477,7 +482,26 @@ function DeleteButton({ productId }: { productId: string }) {
   async function onDelete() {
     if (!confirm("Të fshihet ky produkt? Veprimi është i pakthyeshëm.")) return;
     setBusy(true);
-    await deleteProduct(productId);
+    try {
+      const res = await deleteProduct(productId);
+      // Success redirects server-side; only a returned object means failure.
+      if (res?.error) {
+        setBusy(false);
+        alert(res.error);
+      }
+    } catch (e) {
+      // Let Next's redirect signal pass through; report anything else.
+      if (
+        e &&
+        typeof e === "object" &&
+        "digest" in e &&
+        String((e as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
+      ) {
+        throw e;
+      }
+      setBusy(false);
+      alert("Fshirja dështoi. Provoni përsëri.");
+    }
   }
 
   return (
@@ -570,7 +594,7 @@ const inputStyle: React.CSSProperties = {
   background: "var(--bg)",
   border: "1px solid var(--border)",
   color: "var(--text)",
-  fontFamily: "var(--font-outfit), system-ui, sans-serif",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
   fontSize: 14,
   outline: "none",
 };

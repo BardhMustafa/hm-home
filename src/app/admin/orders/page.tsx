@@ -3,8 +3,11 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { OrdersFilterBar, StatusBadge } from "@/components/admin/orders-filter";
+import { Pagination } from "@/components/admin/pagination";
 
 export const metadata = { title: "Porositë — Admin" };
+
+const PAGE_SIZE = 50;
 
 const STATUSES = [
   "pending", "confirmed", "processing", "shipped", "delivered", "cancelled",
@@ -30,9 +33,10 @@ function periodStart(period: string): Date | null {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string; status?: string; dateFrom?: string; dateTo?: string }>;
+  searchParams: Promise<{ period?: string; status?: string; dateFrom?: string; dateTo?: string; page?: string }>;
 }) {
-  const { period = "all", status = "", dateFrom = "", dateTo = "" } = await searchParams;
+  const { period = "all", status = "", dateFrom = "", dateTo = "", page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
   const supabase = await createClient();
 
   // Fetch all orders for stats (always unfiltered)
@@ -53,7 +57,10 @@ export default async function AdminOrdersPage({
   // Filtered orders for table
   let query = supabase
     .from("orders")
-    .select("id, full_name, guest_email, phone, total, status, created_at, city, address")
+    .select(
+      "id, full_name, guest_email, phone, total, status, created_at, city, address",
+      { count: "exact" },
+    )
     .order("created_at", { ascending: false });
 
   const hasCustomRange = Boolean(dateFrom || dateTo);
@@ -76,7 +83,18 @@ export default async function AdminOrdersPage({
     query = query.eq("status", status);
   }
 
-  const { data: orders } = await query;
+  const from = (page - 1) * PAGE_SIZE;
+  query = query.range(from, from + PAGE_SIZE - 1);
+
+  const { data: orders, count } = await query;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+
+  // Preserve active filters when paginating.
+  const pageParams: Record<string, string> = {};
+  if (period && period !== "all") pageParams.period = period;
+  if (status) pageParams.status = status;
+  if (dateFrom) pageParams.dateFrom = dateFrom;
+  if (dateTo) pageParams.dateTo = dateTo;
 
   return (
     <>
@@ -150,7 +168,7 @@ export default async function AdminOrdersPage({
           marginBottom: 12,
         }}
       >
-        {orders?.length ?? 0} porosi{" "}
+        {count ?? 0} porosi{" "}
         {period !== "all" || status
           ? `(të filtruara)`
           : ""}
@@ -260,6 +278,13 @@ export default async function AdminOrdersPage({
           </tbody>
         </table>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        pathname="/admin/orders"
+        params={pageParams}
+      />
     </>
   );
 }

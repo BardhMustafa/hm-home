@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { placeOrder, type CheckoutState } from "./actions";
 
 export function CheckoutForm({
@@ -15,6 +15,11 @@ export function CheckoutForm({
     undefined,
   );
 
+  // Stable per-render-session idempotency key: a double-submit (double-click,
+  // Enter-resubmit, retry) carries the same key, so the server places at most
+  // one order for this checkout.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+
   const err = (k: string) => state?.fieldErrors?.[k];
 
   return (
@@ -22,6 +27,7 @@ export function CheckoutForm({
       action={action}
       style={{ display: "flex", flexDirection: "column", gap: 18 }}
     >
+      <input type="hidden" name="idempotency_key" value={idempotencyKey} />
       <div className="eyebrow">Të dhënat e dorëzimit</div>
 
       <Row>
@@ -141,7 +147,7 @@ const inputStyle: React.CSSProperties = {
   background: "var(--bg)",
   border: "1px solid var(--border)",
   color: "var(--text)",
-  fontFamily: "var(--font-outfit), system-ui, sans-serif",
+  fontFamily: "var(--font-sans), system-ui, sans-serif",
   fontSize: 14,
   outline: "none",
 };

@@ -106,7 +106,16 @@ async function getOrCreateCart(): Promise<{ id: string }> {
       .insert({ user_id: user.id })
       .select("id")
       .single();
-    if (error) throw error;
+    // A parallel add may have created the row between findCartRow() and this
+    // insert; the partial unique index rejects the duplicate (23505) — fall
+    // back to the row that won the race instead of throwing.
+    if (error) {
+      if (error.code === "23505") {
+        const raced = await findCartRow();
+        if (raced) return raced;
+      }
+      throw error;
+    }
     return data;
   }
 
@@ -116,7 +125,13 @@ async function getOrCreateCart(): Promise<{ id: string }> {
     .insert({ session_id: sid })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505") {
+      const raced = await findCartRow();
+      if (raced) return raced;
+    }
+    throw error;
+  }
   return data;
 }
 
@@ -172,7 +187,8 @@ export async function getCart(): Promise<CartSnapshot> {
 // Mutations -----------------------------------------------------
 
 export async function addToCart(productId: string, qty = 1): Promise<void> {
-  if (qty <= 0) return;
+  qty = Math.floor(qty);
+  if (!Number.isFinite(qty) || qty <= 0) return;
   const admin = createAdminClient();
 
   // Validate the product exists + has stock before touching the cart.
@@ -195,6 +211,9 @@ export async function addToCart(productId: string, qty = 1): Promise<void> {
 
   const newQty = (existing?.quantity ?? 0) + qty;
   const nextQty = product.stock === null ? newQty : Math.min(product.stock, newQty);
+  // stock === 0 (sold out) clamps to 0; never write a non-positive quantity
+  // (the DB CHECK (quantity > 0) would reject it).
+  if (nextQty <= 0) return;
   if (existing) {
     await admin
       .from("cart_items")
@@ -211,40 +230,59 @@ export async function updateCartItem(
   itemId: string,
   qty: number,
 ): Promise<void> {
+  // Ownership: only act on items in the caller's own cart. Without this the
+  // service-role client would let anyone edit any cart line by id.
+  const cart = await findCartRow();
+  if (!cart) return;
   const admin = createAdminClient();
-  if (qty <= 0) {
-    await admin.from("cart_items").delete().eq("id", itemId);
+
+  qty = Math.floor(qty);
+  if (!Number.isFinite(qty) || qty <= 0) {
+    await admin
+      .from("cart_items")
+      .delete()
+      .eq("id", itemId)
+      .eq("cart_id", cart.id);
     return;
   }
+
   // Cap by stock so the cart can't outpace inventory.
   const { data: item } = await admin
     .from("cart_items")
-    .select("product:products(stock)")
+    .select("id, product:products(stock)")
     .eq("id", itemId)
+    .eq("cart_id", cart.id)
     .maybeSingle();
+  if (!item) return; // not found or not owned by this cart
+
   const stock = (() => {
-    const p = item?.product as
-      | { stock: number }
-      | { stock: number }[]
+    const p = item.product as
+      | { stock: number | null }
+      | { stock: number | null }[]
       | null
       | undefined;
-    if (!p) return Infinity;
-    return Array.isArray(p) ? p[0]?.stock ?? Infinity : p.stock;
+    if (!p) return null;
+    const s = Array.isArray(p) ? p[0]?.stock : p.stock;
+    return s ?? null; // null = made-to-order, no cap
   })();
-  await admin
-    .from("cart_items")
-    .update({ quantity: Math.min(qty, stock) })
-    .eq("id", itemId);
+  const capped = stock === null ? qty : Math.min(qty, stock);
+  if (capped <= 0) {
+    await admin.from("cart_items").delete().eq("id", item.id);
+    return;
+  }
+  await admin.from("cart_items").update({ quantity: capped }).eq("id", item.id);
 }
 
 export async function removeCartItem(itemId: string): Promise<void> {
+  // Ownership-scoped delete — see updateCartItem.
+  const cart = await findCartRow();
+  if (!cart) return;
   const admin = createAdminClient();
-  await admin.from("cart_items").delete().eq("id", itemId);
-}
-
-export async function clearCart(cartId: string): Promise<void> {
-  const admin = createAdminClient();
-  await admin.from("cart_items").delete().eq("cart_id", cartId);
+  await admin
+    .from("cart_items")
+    .delete()
+    .eq("id", itemId)
+    .eq("cart_id", cart.id);
 }
 
 // Called from the login server action after a successful sign-in: if the
@@ -292,20 +330,37 @@ export async function mergeGuestCartOnLogin(userId: string): Promise<void> {
       (userLines ?? []).map((l) => [l.product_id, l]),
     );
 
+    // Look up live stock so merged quantities can't exceed inventory.
+    const productIds = [...new Set((guestLines ?? []).map((g) => g.product_id))];
+    const { data: stocks } = productIds.length
+      ? await admin.from("products").select("id, stock").in("id", productIds)
+      : { data: [] };
+    const stockById = new Map(
+      (stocks ?? []).map((p) => [p.id, p.stock as number | null]),
+    );
+    const cap = (productId: string, qty: number) => {
+      const stock = stockById.get(productId);
+      return stock === null || stock === undefined ? qty : Math.min(qty, stock);
+    };
+
     for (const g of guestLines ?? []) {
       const existing = userByProduct.get(g.product_id);
       if (existing) {
+        const merged = cap(g.product_id, existing.quantity + g.quantity);
+        if (merged <= 0) continue;
         await admin
           .from("cart_items")
-          .update({ quantity: existing.quantity + g.quantity })
+          .update({ quantity: merged })
           .eq("id", existing.id);
       } else {
+        const merged = cap(g.product_id, g.quantity);
+        if (merged <= 0) continue;
         await admin
           .from("cart_items")
           .insert({
             cart_id: userCart.id,
             product_id: g.product_id,
-            quantity: g.quantity,
+            quantity: merged,
           });
       }
     }

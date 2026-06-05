@@ -37,6 +37,7 @@ function toCard(p: RawProductRow): ProductCardData {
     was: hasDiscount ? Number(p.price) : null,
     badge: hasDiscount ? "sale" : null,
     image: first?.image_url ?? null,
+    stock: p.stock,
   };
 }
 
@@ -73,29 +74,40 @@ export async function getShopProducts(filters: ShopFilters = {}) {
     .from("products")
     .select(
       "id, name, slug, price, discount_price, stock, featured, category:categories!inner(name, slug), images:product_images(image_url, position)",
-    );
+    )
+    .order("created_at", { ascending: false });
 
+  // Single-column predicates stay in SQL.
   if (filters.category) q = q.eq("category.slug", filters.category);
-  if (typeof filters.minPrice === "number") q = q.gte("price", filters.minPrice);
-  if (typeof filters.maxPrice === "number") q = q.lte("price", filters.maxPrice);
   if (filters.avail === "stock") q = q.gt("stock", 0);
   if (filters.avail === "order") q = q.is("stock", null);
-  if (filters.onSale) q = q.not("discount_price", "is", null);
-
-  switch (filters.sort) {
-    case "price-asc":
-      q = q.order("price", { ascending: true });
-      break;
-    case "price-desc":
-      q = q.order("price", { ascending: false });
-      break;
-    default:
-      q = q.order("created_at", { ascending: false });
-  }
 
   const { data, error } = await q;
   if (error || !data) return [];
-  return (data as RawProductRow[]).map(toCard);
+
+  let cards = (data as RawProductRow[]).map(toCard);
+
+  // Price filtering, sorting, and "on sale" are evaluated on the EFFECTIVE
+  // price (the discounted price when a product is actually on sale) — i.e.
+  // what the shopper sees — not the raw `price` column. PostgREST can't
+  // compare/sort on that computed value, so it's done here. `badge === "sale"`
+  // is exactly `discount_price < price`, so it also excludes bogus discounts
+  // (discount_price >= price).
+  if (filters.onSale) cards = cards.filter((c) => c.badge === "sale");
+  if (typeof filters.minPrice === "number") {
+    const min = filters.minPrice;
+    cards = cards.filter((c) => c.price >= min);
+  }
+  if (typeof filters.maxPrice === "number") {
+    const max = filters.maxPrice;
+    cards = cards.filter((c) => c.price <= max);
+  }
+
+  if (filters.sort === "price-asc") cards.sort((a, b) => a.price - b.price);
+  else if (filters.sort === "price-desc") cards.sort((a, b) => b.price - a.price);
+  // default: newest first — already ordered by created_at in the query.
+
+  return cards;
 }
 
 // Product detail — full row + ordered images + related.

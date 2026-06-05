@@ -74,7 +74,7 @@ export function CategoriesSection({
                         left: 14,
                         zIndex: 2,
                         padding: "5px 10px",
-                        fontFamily: "var(--font-jetbrains), ui-monospace, monospace",
+                        fontFamily: "var(--font-mono), ui-monospace, monospace",
                         fontSize: 10,
                         letterSpacing: "0.16em",
                         textTransform: "uppercase",

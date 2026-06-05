@@ -138,7 +138,7 @@ export default async function MyOrdersPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                       <span
                         style={{
-                          fontFamily: "var(--font-jetbrains)",
+                          fontFamily: "var(--font-mono)",
                           fontSize: 12,
                           color: "var(--gold)",
                           letterSpacing: "0.08em",
