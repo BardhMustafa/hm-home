@@ -59,6 +59,17 @@ html, body {
   background: var(--bg);
 }
 
+/* --- Skeleton shimmer --- */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--elevated) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -305,62 +316,16 @@ img, video { max-width: 100%; height: auto; }
   .values-grid > div:first-child { border-top: none; }
 }
 
-/* --- Category section: mobile panel overrides --- */
-/* Desktop: two-column panel, labels visible, dots hidden */
-.cat-prognav-labels { display: flex; justify-content: space-between; gap: 24px; }
-.cat-dots-mobile    { display: none; justify-content: center; gap: 10px; }
+/* --- Category grid cards --- */
+.cat-grid-card:hover .cat-grid-img {
+  transform: scale(1.06) !important;
+}
 
 @media (max-width: 767px) {
-  /* Panel becomes a flex column so the image stretches to fill remaining height */
-  .cat-panel {
-    display: flex !important;
-    flex-direction: column !important;
-    grid-template-columns: unset !important;
-    padding: 80px 28px 100px !important;
-    align-items: stretch !important;
+  /* single column on narrow screens */
+  .cat-grid-cards {
+    grid-template-columns: 1fr !important;
   }
-
-  /* Copy block: full width, no side padding */
-  .cat-copy-col {
-    padding: 0 !important;
-    flex-shrink: 0;
-  }
-  /* Smaller title on mobile */
-  .cat-copy-col h2 { font-size: clamp(36px, 10vw, 52px) !important; }
-  /* Hide the long description paragraph — too much text for a small screen */
-  .cat-copy-col p { display: none !important; }
-  /* Tighten CTA margin */
-  .cat-cta { margin-top: 20px !important; }
-
-  /* Product card: fills remaining vertical space */
-  .cat-card-col {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 !important;
-    padding: 18px 0 0 !important;
-    max-width: 100% !important;
-    min-height: 0 !important;
-  }
-  .cat-card-col > a {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 !important;
-    min-height: 0 !important;
-  }
-  /* Image frame: drops aspect-ratio, stretches to fill */
-  .cat-card-frame {
-    flex: 1 !important;
-    aspect-ratio: unset !important;
-    max-height: none !important;
-    min-height: 0 !important;
-  }
-
-  /* Hide scroll hint wheel */
-  .cat-hint { display: none !important; }
-
-  /* Swap nav chrome: hide text labels, show dots */
-  .cat-prognav-labels { display: none !important; }
-  .cat-dots-mobile    { display: flex !important; }
 }
 
 /* =====================================================
@@ -435,100 +400,6 @@ img, video { max-width: 100%; height: auto; }
   .hero-btn-row .btn { justify-content: center; }
 }
 
-/* --- Category CTA button (desktop copy block) --- */
-.cat-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 40px;
-  padding: 16px 30px;
-  background: var(--gold);
-  color: #15110d;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background 0.25s ease, gap 0.25s ease;
-}
-.cat-cta:hover  { background: var(--gold-bright); gap: 18px; }
-.cat-cta:active { transform: scale(0.97); opacity: 0.85; }
-
-/* --- Progress nav (desktop bottom chrome) --- */
-.prognav-btn {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 9px;
-  white-space: nowrap;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-  transition: color 0.3s ease;
-}
-.prognav-n {
-  font-family: var(--font-jetbrains), ui-monospace, monospace;
-  font-size: 10px;
-  color: var(--muted-2);
-  transition: color 0.3s ease;
-}
-.prognav-btn.prognav-active          { color: var(--text); }
-.prognav-btn.prognav-active .prognav-n { color: var(--gold); }
-
-/* --- Scroll hint wheel (desktop) --- */
-.cat-wheel {
-  width: 22px;
-  height: 34px;
-  border: 1px solid var(--gold-deep);
-  border-radius: 12px;
-  position: relative;
-}
-.cat-wheel::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 7px;
-  width: 3px;
-  height: 6px;
-  background: var(--gold);
-  border-radius: 2px;
-  transform: translateX(-50%);
-  animation: cat-drop 1.6s ease-in-out infinite;
-}
-@keyframes cat-drop {
-  0%,100% { opacity: 0; transform: translate(-50%, 0); }
-  30%      { opacity: 1; }
-  60%      { opacity: 1; transform: translate(-50%, 12px); }
-}
-
-.cat-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.22);
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.cat-dot.active {
-  width: 26px;
-  background: var(--gold);
-}
-
-.cat-nudge-arrow {
-  display: inline-block;
-  animation: cat-nudge 1.4s ease-in-out infinite;
-}
-@keyframes cat-nudge {
-  0%,100% { transform: translateX(0); }
-  50%     { transform: translateX(5px); }
-}
 
 /* --- Shop sidebar --- */
 .shop-section-head {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 const PERIODS = [
   { value: "all",   label: "Të gjitha" },
@@ -32,6 +32,7 @@ export function OrdersFilterBar({
 }) {
   const router = useRouter();
   const sp = useSearchParams();
+  const [pending, startTransition] = useTransition();
 
   // Local date state — pre-filled from URL so inputs survive navigation
   const [dateFrom, setDateFrom] = useState(currentDateFrom);
@@ -40,52 +41,52 @@ export function OrdersFilterBar({
   const hasCustomRange = Boolean(currentDateFrom || currentDateTo);
 
   function navigatePeriod(value: string) {
-    const params = new URLSearchParams(sp.toString());
-    // Clear custom range when picking a period chip
-    params.delete("dateFrom");
-    params.delete("dateTo");
     setDateFrom("");
     setDateTo("");
-    if (value === "all") {
-      params.delete("period");
-    } else {
-      params.set("period", value);
-    }
-    router.push(`/admin/orders?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(sp.toString());
+      params.delete("dateFrom");
+      params.delete("dateTo");
+      if (value === "all") params.delete("period");
+      else params.set("period", value);
+      router.push(`/admin/orders?${params.toString()}`);
+    });
   }
 
   function navigateStatus(value: string) {
-    const params = new URLSearchParams(sp.toString());
-    if (value === "") {
-      params.delete("status");
-    } else {
-      params.set("status", value);
-    }
-    router.push(`/admin/orders?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(sp.toString());
+      if (value === "") params.delete("status");
+      else params.set("status", value);
+      router.push(`/admin/orders?${params.toString()}`);
+    });
   }
 
   function applyCustomRange() {
-    const params = new URLSearchParams(sp.toString());
-    // Custom range overrides period chips
-    params.delete("period");
-    if (dateFrom) params.set("dateFrom", dateFrom);
-    else params.delete("dateFrom");
-    if (dateTo) params.set("dateTo", dateTo);
-    else params.delete("dateTo");
-    router.push(`/admin/orders?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(sp.toString());
+      params.delete("period");
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      else params.delete("dateFrom");
+      if (dateTo) params.set("dateTo", dateTo);
+      else params.delete("dateTo");
+      router.push(`/admin/orders?${params.toString()}`);
+    });
   }
 
   function clearCustomRange() {
     setDateFrom("");
     setDateTo("");
-    const params = new URLSearchParams(sp.toString());
-    params.delete("dateFrom");
-    params.delete("dateTo");
-    router.push(`/admin/orders?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(sp.toString());
+      params.delete("dateFrom");
+      params.delete("dateTo");
+      router.push(`/admin/orders?${params.toString()}`);
+    });
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24, opacity: pending ? 0.6 : 1, pointerEvents: pending ? "none" : "auto", transition: "opacity 0.2s" }}>
       {/* Row 1: period chips + custom date range */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         {/* Period chips — dimmed when custom range is active */}

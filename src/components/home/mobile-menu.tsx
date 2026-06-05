@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Wordmark } from "./wordmark";
 
@@ -21,14 +22,17 @@ export function MobileMenuButton({
   cartCount: number;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Lock body scroll when drawer is open.
+  // Only portal after hydration so SSR doesn't break
+  useEffect(() => { setMounted(true); }, []);
+
+  // Lock body scroll when drawer is open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  // Close on route change (any link click inside the drawer).
   function close() { setOpen(false); }
 
   const lineStyle: React.CSSProperties = {
@@ -39,61 +43,27 @@ export function MobileMenuButton({
     transition: "transform 0.25s ease, opacity 0.25s ease",
   };
 
-  return (
+  // Backdrop + drawer rendered at <body> level to escape the sticky header's
+  // stacking context — fixes iOS Safari where position:fixed inside
+  // position:sticky+z-index doesn't paint correctly.
+  const overlay = mounted ? createPortal(
     <>
-      {/* Hamburger button — only visible on mobile via CSS */}
-      <button
-        className="r-hamburger"
-        aria-label={open ? "Mbyll menynë" : "Hap menynë"}
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        style={{
-          background: "transparent",
-          border: 0,
-          cursor: "pointer",
-          padding: 6,
-          display: "flex",
-          flexDirection: "column",
-          gap: 5,
-          color: "var(--text)",
-          flexShrink: 0,
-        }}
-      >
-        <span
-          style={{
-            ...lineStyle,
-            transform: open ? "translateY(6.5px) rotate(45deg)" : "none",
-          }}
-        />
-        <span
-          style={{
-            ...lineStyle,
-            opacity: open ? 0 : 1,
-          }}
-        />
-        <span
-          style={{
-            ...lineStyle,
-            transform: open ? "translateY(-6.5px) rotate(-45deg)" : "none",
-          }}
-        />
-      </button>
-
       {/* Backdrop */}
-      {open && (
-        <div
-          onClick={close}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(8,7,6,0.6)",
-            backdropFilter: "blur(4px)",
-            zIndex: 49,
-          }}
-        />
-      )}
+      <div
+        onClick={close}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(8,7,6,0.6)",
+          backdropFilter: "blur(4px)",
+          zIndex: 9000,
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
+          transition: "opacity 0.3s ease",
+        }}
+      />
 
-      {/* Drawer — slides in from the left */}
+      {/* Drawer */}
       <div
         style={{
           position: "fixed",
@@ -107,7 +77,7 @@ export function MobileMenuButton({
           flexDirection: "column",
           padding: "32px 28px 40px",
           gap: 0,
-          zIndex: 50,
+          zIndex: 9001,
           transform: open ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
           overflowY: "auto",
@@ -121,13 +91,7 @@ export function MobileMenuButton({
         </div>
 
         {/* Main nav */}
-        <nav
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
+        <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {NAV.map((n) => (
             <Link
               key={n.href}
@@ -162,11 +126,7 @@ export function MobileMenuButton({
             color: "var(--text-2)",
           }}
         >
-          <Link
-            href="/shop"
-            onClick={close}
-            style={{ color: "inherit", textDecoration: "none" }}
-          >
+          <Link href="/shop" onClick={close} style={{ color: "inherit", textDecoration: "none" }}>
             Kërko
           </Link>
           <Link
@@ -209,12 +169,11 @@ export function MobileMenuButton({
           </Link>
         </div>
 
-        {/* Close button at bottom */}
+        {/* Close button */}
         <button
           onClick={close}
           style={{
             marginTop: "auto",
-            paddingTop: 32,
             background: "transparent",
             border: 0,
             color: "var(--muted)",
@@ -229,6 +188,36 @@ export function MobileMenuButton({
           × Mbyll
         </button>
       </div>
+    </>,
+    document.body,
+  ) : null;
+
+  return (
+    <>
+      {/* Hamburger button */}
+      <button
+        className="r-hamburger"
+        aria-label={open ? "Mbyll menynë" : "Hap menynë"}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          background: "transparent",
+          border: 0,
+          cursor: "pointer",
+          padding: 6,
+          display: "flex",
+          flexDirection: "column",
+          gap: 5,
+          color: "var(--text)",
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ ...lineStyle, transform: open ? "translateY(6.5px) rotate(45deg)" : "none" }} />
+        <span style={{ ...lineStyle, opacity: open ? 0 : 1 }} />
+        <span style={{ ...lineStyle, transform: open ? "translateY(-6.5px) rotate(-45deg)" : "none" }} />
+      </button>
+
+      {overlay}
     </>
   );
 }

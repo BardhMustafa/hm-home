@@ -7,6 +7,7 @@ import { Header } from "@/components/home/header";
 import { Footer } from "@/components/home/footer";
 import { CartQtyControl } from "@/components/shop/cart-qty-control";
 import { CartRemoveButton } from "@/components/shop/cart-remove-button";
+import { CheckoutLink } from "@/components/shop/checkout-link";
 
 export const metadata = { title: "Shporta — HM Home" };
 
@@ -362,13 +363,7 @@ export default async function CartPage() {
                   </div>
                 </div>
               )}
-              <Link
-                href="/checkout"
-                className="btn btn--solid"
-                style={{ width: "100%", justifyContent: "center" }}
-              >
-                Vazhdo me blerjen
-              </Link>
+              <CheckoutLink className="btn btn--solid" />
             </aside>
           </div>
           </>

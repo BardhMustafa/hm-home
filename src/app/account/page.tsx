@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/home/header";
 import { Footer } from "@/components/home/footer";
-import { signout } from "../auth/actions";
+import { SignOutButton } from "@/components/account/sign-out-button";
 
 export const metadata = { title: "Llogaria — HM Home" };
 
@@ -207,33 +207,7 @@ export default async function AccountPage() {
           </Link>
 
           {/* Sign out */}
-          <form action={signout}>
-            <button
-              type="submit"
-              className="account-tile--muted"
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 18,
-                padding: "22px 4px",
-                background: "none",
-                border: "none",
-                borderBottom: "1px solid var(--border-soft)",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span style={{ flex: 1, fontSize: 13, letterSpacing: "0.16em", textTransform: "uppercase" }}>
-                Dil
-              </span>
-            </button>
-          </form>
+          <SignOutButton />
         </div>
       </main>
       <Footer />

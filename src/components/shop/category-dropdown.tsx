@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 
 type Cat = { name: string; slug: string };
 
@@ -16,6 +16,7 @@ export function CategoryDropdown({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
 
   const all = [{ name: "Të gjitha", slug: "" }, ...categories];
@@ -32,11 +33,13 @@ export function CategoryDropdown({
 
   function select(slug: string) {
     setOpen(false);
-    const params = new URLSearchParams(query);
-    if (slug) params.set("cat", slug);
-    else params.delete("cat");
-    const qs = params.toString();
-    router.push(`/shop${qs ? `?${qs}` : ""}`);
+    startTransition(() => {
+      const params = new URLSearchParams(query);
+      if (slug) params.set("cat", slug);
+      else params.delete("cat");
+      const qs = params.toString();
+      router.push(`/shop${qs ? `?${qs}` : ""}`);
+    });
   }
 
   return (
@@ -47,8 +50,10 @@ export function CategoryDropdown({
         onClick={() => setOpen((o) => !o)}
         className="shop-dd-trigger"
         aria-expanded={open}
+        disabled={pending}
+        style={{ opacity: pending ? 0.6 : 1 }}
       >
-        <span>{selected.name}</span>
+        <span>{pending ? "Duke filtruar…" : selected.name}</span>
         <svg
           width="12"
           height="12"

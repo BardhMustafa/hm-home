@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans, DM_Mono } from "next/font/google";
+import { Bodoni_Moda, Inter, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { ScrollToTop } from "@/components/scroll-to-top";
+import { NavProgress } from "@/components/nav-progress";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -9,17 +11,17 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const dmSans = DM_Sans({
+const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
-const cormorant = Cormorant_Garamond({
+const bodoni = Bodoni_Moda({
   variable: "--font-cormorant",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   display: "swap",
 });
@@ -52,8 +54,10 @@ export default function RootLayout({
   return (
     <html lang="sq" suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${cormorant.variable} ${dmMono.variable} antialiased`}
+        className={`${inter.variable} ${bodoni.variable} ${dmMono.variable} antialiased`}
       >
+        <NavProgress />
+        <ScrollToTop />
         {children}
         <Toaster />
       </body>
