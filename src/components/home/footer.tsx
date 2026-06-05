@@ -64,9 +64,6 @@ export function Footer() {
             <span className="w" />
             <span className="r" />
           </div>
-          <div style={{ marginTop: 10, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted)" }}>
-            Made in Italy
-          </div>
         </div>
 
         {/* Nav columns */}
