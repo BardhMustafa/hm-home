@@ -17,7 +17,7 @@ const NAV = [
   {
     h: "Shërbimet",
     links: [
-      { label: "Konsulencë falas", href: "#" },
+      { label: "Caktoni vizitën", href: "/caktoni-viziten" },
       { label: "Dorëzimi & Montimi", href: "#" },
       { label: "Garancia", href: "#" },
       { label: "Riparime", href: "#" },

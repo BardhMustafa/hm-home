@@ -111,9 +111,6 @@ export function Hero() {
           <Link href="/shop" className="btn btn--solid" style={{ padding: "15px 28px", fontSize: 11, letterSpacing: "0.22em" }}>
             Zbulo koleksionin
           </Link>
-          <Link href="#" className="btn btn--ghost" style={{ padding: "15px 28px", fontSize: 11, letterSpacing: "0.22em" }}>
-            Pikat tona
-          </Link>
         </div>
       </div>
     </section>

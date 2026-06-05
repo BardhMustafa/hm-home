@@ -7,6 +7,7 @@ const NAV = [
   { href: "/admin/products", label: "Produktet" },
   { href: "/admin/categories", label: "Kategoritë" },
   { href: "/admin/orders", label: "Porositë" },
+  { href: "/admin/visits", label: "Vizitat" },
 ];
 
 export function AdminSidebar() {

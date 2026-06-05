@@ -55,7 +55,7 @@ export function ShowroomCTA() {
           Konsulencë falas me specialistët tanë të dizajnit.
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <Link href="/contact" className="btn btn--solid" style={{ padding: "14px 32px" }}>
+          <Link href="/caktoni-viziten" className="btn btn--solid" style={{ padding: "14px 32px" }}>
             Caktoni vizitën
           </Link>
           <Link href="/shop" className="btn btn--ghost" style={{ padding: "14px 32px" }}>
