@@ -1,9 +1,9 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
-export function NavProgress() {
+function NavProgressInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [visible, setVisible] = useState(false);
@@ -61,5 +61,13 @@ export function NavProgress() {
         boxShadow: "0 0 8px var(--gold)",
       }}
     />
+  );
+}
+
+export function NavProgress() {
+  return (
+    <Suspense fallback={null}>
+      <NavProgressInner />
+    </Suspense>
   );
 }

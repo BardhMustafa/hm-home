@@ -56,7 +56,7 @@ export function AdminRouteLoader() {
       document.removeEventListener("click", handleClick);
       clearTimers();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!visible) return null;
 
