@@ -2,17 +2,11 @@ import Link from "next/link";
 import { Wordmark } from "./wordmark";
 import { createClient } from "@/lib/supabase/server";
 import { getCart } from "@/lib/cart";
+import { getNavCategories } from "@/lib/products";
 import { hasSupabase } from "@/lib/supabase/env";
 import { MobileMenuButton } from "./mobile-menu";
 import { HeaderShell } from "./header-shell";
 import { NavAccount } from "./nav-account";
-
-const NAV_LEFT = [
-  { label: "Kuzhina", href: "/shop?cat=kuzhina" },
-  { label: "Divane", href: "/shop?cat=divane" },
-  { label: "Dhoma Gjumi", href: "/shop?cat=dhoma-gjumi" },
-  { label: "Dekor", href: "/shop?cat=dekor" },
-];
 
 export async function Header({ overlay = false }: { overlay?: boolean }) {
   const supabase = hasSupabase() ? await createClient() : null;
@@ -21,6 +15,11 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
     ? (await supabase.from("profiles").select("role").eq("id", user.id).single()).data?.role === "admin"
     : false;
   const cart = await getCart();
+
+  // Categories drive the nav so it can never drift from the DB. Up to 4 in
+  // the desktop bar (the rest live in /shop); the mobile drawer shows all.
+  const categories = await getNavCategories();
+  const navLeft = categories.slice(0, 4);
 
   return (
     <HeaderShell overlay={overlay}>
@@ -34,6 +33,7 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
             overlay={overlay}
             authed={Boolean(user)}
             cartCount={cart.itemCount}
+            categories={categories}
           />
         </div>
 
@@ -49,15 +49,21 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
             color: "var(--text-2)",
           }}
         >
-          {NAV_LEFT.map((n) => (
-            <Link
-              key={n.label}
-              href={n.href}
-              style={{ color: "inherit", textDecoration: "none" }}
-            >
-              {n.label}
+          {navLeft.length > 0 ? (
+            navLeft.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/shop?cat=${c.slug}`}
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
+                {c.name}
+              </Link>
+            ))
+          ) : (
+            <Link href="/shop" style={{ color: "inherit", textDecoration: "none" }}>
+              Dyqani
             </Link>
-          ))}
+          )}
         </nav>
       </div>
 

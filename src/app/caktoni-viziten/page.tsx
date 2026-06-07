@@ -11,8 +11,7 @@ export const metadata = {
 const INFO = [
   { label: "Adresa", value: "Rr. Sami Frashëri 14, Tiranë" },
   { label: "Orari", value: "Hënë – Shtunë, 9:00 – 20:00" },
-  { label: "Telefon", value: "+355 69 200 1234", href: "tel:+355692001234" },
-  { label: "Email", value: "hello@hmhome.al", href: "mailto:hello@hmhome.al" },
+  { label: "Telefon", value: "+383 49 741 566", href: "tel:+38349741566" },
 ];
 
 export default function CaktoniVizitenPage() {

@@ -8,9 +8,9 @@ const NAV = [
     h: "Dyqani",
     links: [
       { label: "Kuzhina", href: "/shop?cat=kuzhina" },
-      { label: "Divane", href: "/shop?cat=divane" },
+      { label: "Divana", href: "/shop?cat=divana" },
       { label: "Dhoma Gjumi", href: "/shop?cat=dhoma-gjumi" },
-      { label: "Dekor", href: "/shop?cat=dekor" },
+      { label: "Dekore", href: "/shop?cat=dekore" },
       { label: "Të rejat", href: "/shop" },
     ],
   },
@@ -26,10 +26,7 @@ const NAV = [
   {
     h: "Kontakt",
     links: [
-      { label: "Rr. Sami Frashëri 14, Tiranë", href: "#" },
-      { label: "+355 69 200 1234", href: "tel:+355692001234" },
-      { label: "hello@hmhome.al", href: "mailto:hello@hmhome.al" },
-      { label: "Hënë – Shtunë, 9 – 20", href: "#" },
+      { label: "+383 49 741 566", href: "tel:+38349741566" },
     ],
   },
 ];
@@ -56,7 +53,7 @@ export function Footer() {
           <p style={{ marginTop: 20, fontSize: 14, color: "var(--text-2)", lineHeight: 1.65, maxWidth: 300 }}>
             Mobilje me stil. Jetë me komoditet.
             <br />
-            HM Home sjell në Shqipëri më të mirat e dizajnit europian që nga viti 2014.
+            HM Home sjell në Shqipëri më të mirat e dizajnit europian që nga viti 2002.
           </p>
           {/* Italian flag rule */}
           <div className="flag-rule" style={{ marginTop: 24 }}>

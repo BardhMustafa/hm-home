@@ -273,7 +273,7 @@ export default async function ProductPage({ params }: PageParams) {
                     </svg>
                   ),
                   label: "Prodhim Europian",
-                  sub: "Nga viti 2014",
+                  sub: "Nga viti 2002",
                 },
               ].map((b) => (
                 <div

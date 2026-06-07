@@ -3,6 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/supabase/env";
 import type { ProductCardData } from "@/components/home/product-card";
 
+// Lightweight category list for the header / mobile nav, so the navigation
+// always reflects the real categories (and their real slugs) in the DB.
+export async function getNavCategories(): Promise<
+  { name: string; slug: string }[]
+> {
+  if (!hasSupabase()) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("categories")
+    .select("name, slug")
+    .order("name");
+  return data ?? [];
+}
+
 type RawImage = { image_url: string; position: number };
 type RawCategoryRef = { name: string } | { name: string }[] | null;
 

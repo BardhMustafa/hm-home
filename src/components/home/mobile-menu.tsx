@@ -5,22 +5,21 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Wordmark } from "./wordmark";
 
-const NAV = [
-  { label: "Kuzhina", href: "/shop?cat=kuzhina" },
-  { label: "Divane", href: "/shop?cat=divane" },
-  { label: "Dhoma Gjumi", href: "/shop?cat=dhoma-gjumi" },
-  { label: "Dekor", href: "/shop?cat=dekor" },
-  { label: "Koleksione", href: "/shop" },
-];
-
 export function MobileMenuButton({
   authed,
   cartCount,
+  categories = [],
 }: {
   overlay?: boolean;
   authed: boolean;
   cartCount: number;
+  categories?: { name: string; slug: string }[];
 }) {
+  // Real categories from the DB + an "all" entry, so the drawer never drifts.
+  const NAV = [
+    ...categories.map((c) => ({ label: c.name, href: `/shop?cat=${c.slug}` })),
+    { label: "Koleksione", href: "/shop" },
+  ];
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);

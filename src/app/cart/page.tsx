@@ -137,9 +137,9 @@ export default async function CartPage() {
               >
                 {[
                   { name: "Kuzhina", slug: "kuzhina", n: "42" },
-                  { name: "Divane", slug: "divane", n: "68" },
+                  { name: "Divana", slug: "divana", n: "68" },
                   { name: "Dhoma Gjumi", slug: "dhoma-gjumi", n: "31" },
-                  { name: "Dekor", slug: "dekor", n: "124" },
+                  { name: "Dekore", slug: "dekore", n: "124" },
                 ].map((cat, i) => (
                   <Link
                     key={cat.slug}

@@ -13,9 +13,9 @@ type Cat = {
 
 const CAT_DESCS: Record<string, string> = {
   kuzhina: "Kuzhina moderne, të punuara me përpikëri për çdo hapësirë.",
-  divane: "Divane që të përqafojnë — lëkurë e pëlhura të zgjedhura me kujdes.",
+  divana: "Divana që të përqafojnë — lëkurë e pëlhura të zgjedhura me kujdes.",
   "dhoma-gjumi": "Qetësia fillon këtu. Krevate dhe komodë me dizajn të rafinuar.",
-  dekor: "Detajet që e bëjnë shtëpinë tënde. Ndriçim, tekstile dhe aksesorë.",
+  dekore: "Detajet që e bëjnë shtëpinë tënde. Ndriçim, tekstile dhe aksesorë.",
 };
 
 export function CategoriesSection({
