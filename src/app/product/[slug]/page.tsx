@@ -303,8 +303,8 @@ export default async function ProductPage({ params }: PageParams) {
                       <circle cx="18.5" cy="18.5" r="2.5" />
                     </svg>
                   ),
-                  label: "Dorëzim falas",
-                  sub: "Mbi €500",
+                  label: "Dorëzim",
+                  sub: "Në të gjithë Kosovën",
                 },
                 {
                   icon: (

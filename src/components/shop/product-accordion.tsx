@@ -19,7 +19,7 @@ const SECTIONS = [
     key: "delivery",
     label: "Dorëzimi & Montimi",
     content:
-      "Dorëzim falas për porosi mbi €500 në të gjithë Kosovën. Shërbimi i montimit është i disponueshëm si shtesë. Koha e dorëzimit: 3–7 ditë pune për artikujt në stok.",
+      "Dorëzim në të gjithë Kosovën. Shërbimi i montimit është i disponueshëm si shtesë. Ju kontaktojmë me telefon për të caktuar detajet e dorëzimit.",
   },
   {
     key: "returns",
