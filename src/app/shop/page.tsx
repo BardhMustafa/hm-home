@@ -125,9 +125,9 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             {/* Brand label */}
             <div style={{ marginBottom: 32, paddingBottom: 24, borderBottom: "1px solid var(--border-soft)" }}>
               <div className="eyebrow" style={{ fontSize: 10, letterSpacing: "0.3em" }}>HM Home</div>
-              <div className="serif" style={{ fontSize: 22, marginTop: 6, color: "var(--text)" }}>
-                {activeCatName ?? "Të gjitha"}
-              </div>
+              <h1 className="serif" style={{ fontSize: 22, marginTop: 6, color: "var(--text)", fontWeight: 400, lineHeight: 1.2 }}>
+                {activeCatName ?? "Të gjitha produktet"}
+              </h1>
               <div style={{ marginTop: 4, fontSize: 12, color: "var(--muted)" }}>
                 {products.length} {products.length === 1 ? "produkt" : "produkte"}
               </div>
