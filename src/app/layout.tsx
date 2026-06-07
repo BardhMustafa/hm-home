@@ -4,8 +4,15 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { NavProgress } from "@/components/nav-progress";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hmhome.al";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  OG_LOCALE,
+  organizationLd,
+  websiteLd,
+  jsonLd,
+} from "@/lib/seo";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -40,36 +47,46 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "HM Home — Mobilje me stil",
+    default: "HM Home — Mobilje me stil në Kosovë",
     template: "%s — HM Home",
   },
-  description:
-    "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane. Komoditet i pakrahasueshëm, dizajn që zgjat një jetë.",
-  applicationName: "HM Home",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: "/" },
   keywords: [
-    "mobilje",
+    "mobilje Kosovë",
     "HM Home",
     "divan",
     "kanape",
+    "tavolina",
     "dekore",
     "mobilje me stil",
+    "mobilje europiane",
+    "salloni i mobiljeve",
     "Kosovë",
-    "Shqipëri",
   ],
   openGraph: {
-    title: "HM Home — Mobilje me stil",
-    description:
-      "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane.",
+    title: "HM Home — Mobilje me stil në Kosovë",
+    description: SITE_DESCRIPTION,
     url: SITE_URL,
-    siteName: "HM Home",
+    siteName: SITE_NAME,
     type: "website",
-    locale: "sq_AL",
+    locale: OG_LOCALE,
   },
   twitter: {
     card: "summary_large_image",
-    title: "HM Home — Mobilje me stil",
-    description:
-      "Mobilje të zgjedhura me dorë nga punëtoritë më të mira europiane.",
+    title: "HM Home — Mobilje me stil në Kosovë",
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -80,6 +97,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sq" suppressHydrationWarning>
+      <head>
+        {jsonLd(organizationLd())}
+        {jsonLd(websiteLd())}
+      </head>
       <body
         className={`${jakarta.variable} ${lora.variable} ${dmMono.variable} antialiased`}
       >

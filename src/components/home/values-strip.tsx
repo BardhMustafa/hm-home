@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 const VALUES = [
   { number: "20+", label: "Vite eksperiencë", sub: "Që nga viti 2002" },
   { number: "100%", label: "Cilësi europiane", sub: "Direkt nga prodhuesi" },
-  { number: "3", label: "Sallone", sub: "Në të gjithë Shqipërinë" },
+  { number: "3", label: "Sallone", sub: "Në të gjithë Kosovën" },
 ];
 
 export function ValuesStrip() {

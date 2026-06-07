@@ -5,11 +5,11 @@ import { VisitForm } from "./form";
 export const metadata = {
   title: "Caktoni vizitën — HM Home",
   description:
-    "Rezervoni një vizitë në sallonin tonë në Tiranë. Konsulencë falas me specialistët tanë të dizajnit.",
+    "Rezervoni një vizitë në sallonin tonë në Kosovë. Konsulencë falas me specialistët tanë të dizajnit.",
 };
 
 const INFO = [
-  { label: "Adresa", value: "Rr. Sami Frashëri 14, Tiranë" },
+  { label: "Vendndodhja", value: "Kosovë" },
   { label: "Orari", value: "Hënë – Shtunë, 9:00 – 20:00" },
   { label: "Telefon", value: "+383 49 741 566", href: "tel:+38349741566" },
 ];

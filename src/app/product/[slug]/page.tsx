@@ -13,6 +13,13 @@ import { ProductCard } from "@/components/home/product-card";
 import { ProductActions } from "@/components/shop/product-actions";
 import { ProductAccordion } from "@/components/shop/product-accordion";
 import { getWishlistedIds } from "@/lib/wishlist";
+import {
+  SITE_URL,
+  SITE_NAME,
+  BUSINESS,
+  breadcrumbLd,
+  jsonLd,
+} from "@/lib/seo";
 
 type PageParams = { params: Promise<{ slug: string }> };
 
@@ -24,14 +31,29 @@ export async function generateMetadata({
   if (!product) return { title: "Produkti — HM Home" };
 
   const cover = product.images[0]?.image_url;
+  // Concise, keyword-bearing description for SERP snippets when the product
+  // has no copy of its own.
+  const fallbackDesc = `${product.name}${
+    product.category ? ` — ${product.category.name}` : ""
+  } nga HM Home. Mobilje me stil europian, dorëzim në të gjithë Kosovën.`;
+  const description = product.description ?? fallbackDesc;
+
   return {
-    title: `${product.name} — HM Home`,
-    description: product.description ?? `${product.name} — HM Home`,
+    title: product.name,
+    description,
+    alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
-      title: product.name,
-      description: product.description ?? undefined,
+      title: `${product.name} — HM Home`,
+      description,
+      url: `${SITE_URL}/product/${product.slug}`,
       images: cover ? [cover] : undefined,
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} — HM Home`,
+      description,
+      images: cover ? [cover] : undefined,
     },
   };
 }
@@ -59,23 +81,51 @@ export default async function ProductPage({ params }: PageParams) {
     product.discount_price < product.price;
   const shownPrice = hasDiscount ? product.discount_price! : product.price;
 
+  const productUrl = `${SITE_URL}/product/${product.slug}`;
+  // priceValidUntil keeps the Offer eligible for rich results; ~1 year out.
+  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
   const ld = {
     "@context": "https://schema.org/",
     "@type": "Product",
+    "@id": productUrl,
     name: product.name,
     description: product.description ?? undefined,
     sku: product.sku ?? undefined,
+    mpn: product.sku ?? undefined,
+    category: product.category?.name ?? undefined,
+    brand: { "@type": "Brand", name: SITE_NAME },
     image: product.images.map((i) => i.image_url),
     offers: {
       "@type": "Offer",
+      url: productUrl,
       price: shownPrice,
-      priceCurrency: "EUR",
+      priceCurrency: BUSINESS.currency,
+      priceValidUntil,
+      itemCondition: "https://schema.org/NewCondition",
       availability:
         product.stock === null || product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+      seller: { "@id": `${SITE_URL}/#business` },
     },
   };
+
+  const breadcrumbs = breadcrumbLd([
+    { name: "HM Home", url: SITE_URL },
+    { name: "Dyqani", url: `${SITE_URL}/shop` },
+    ...(product.category
+      ? [
+          {
+            name: product.category.name,
+            url: `${SITE_URL}/shop?cat=${product.category.slug}`,
+          },
+        ]
+      : []),
+    { name: product.name, url: productUrl },
+  ]);
 
   return (
     <>
@@ -332,10 +382,8 @@ export default async function ProductPage({ params }: PageParams) {
           </section>
         )}
 
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
-        />
+        {jsonLd(ld)}
+        {jsonLd(breadcrumbs)}
       </main>
       <Footer />
     </>

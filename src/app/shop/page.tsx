@@ -7,8 +7,41 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/supabase/env";
 import { getWishlistedIds } from "@/lib/wishlist";
 import { CategoryDropdown } from "@/components/shop/category-dropdown";
+import type { Metadata } from "next";
 
-export const metadata = { title: "Dyqani — HM Home" };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Sp>;
+}): Promise<Metadata> {
+  const { cat } = await searchParams;
+
+  // Resolve the category name for a tailored title; fall back to the
+  // generic shop listing otherwise.
+  let catName: string | null = null;
+  if (cat && hasSupabase()) {
+    const { data } = await (await createClient())
+      .from("categories")
+      .select("name")
+      .eq("slug", cat)
+      .maybeSingle();
+    catName = data?.name ?? null;
+  }
+
+  const title = catName ? `${catName} — Dyqani` : "Dyqani";
+  const description = catName
+    ? `Bli ${catName.toLowerCase()} me stil europian nga HM Home. Dorëzim në të gjithë Kosovën.`
+    : "Shfletoni koleksionin e plotë të mobiljeve dhe dekoreve HM Home — dizajn europian, dorëzim në të gjithë Kosovën.";
+
+  // Canonical points at the category (a real listing) or the bare /shop,
+  // so sort/price filter permutations don't fragment indexing.
+  return {
+    title,
+    description,
+    alternates: { canonical: cat ? `/shop?cat=${cat}` : "/shop" },
+    openGraph: { title: `${title} — HM Home`, description, type: "website" },
+  };
+}
 
 const SORTS = [
   { id: "newest",     label: "Më të rejat" },

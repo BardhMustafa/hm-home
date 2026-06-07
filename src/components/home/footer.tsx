@@ -53,7 +53,7 @@ export function Footer() {
           <p style={{ marginTop: 20, fontSize: 14, color: "var(--text-2)", lineHeight: 1.65, maxWidth: 300 }}>
             Mobilje me stil. Jetë me komoditet.
             <br />
-            HM Home sjell në Shqipëri më të mirat e dizajnit europian që nga viti 2002.
+            HM Home sjell në Kosovë më të mirat e dizajnit europian që nga viti 2002.
           </p>
           {/* Italian flag rule */}
           <div className="flag-rule" style={{ marginTop: 24 }}>

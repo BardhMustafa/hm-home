@@ -64,7 +64,7 @@ export function CheckoutForm({
           <Input name="postal_code" />
         </Field>
         <Field label="Shteti" error={err("country")}>
-          <Input name="country" required defaultValue="Shqipëri" />
+          <Input name="country" required defaultValue="Kosovë" />
         </Field>
       </Row>
 

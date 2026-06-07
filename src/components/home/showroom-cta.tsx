@@ -51,7 +51,7 @@ export function ShowroomCTA() {
           <em style={{ color: "var(--gold)", fontStyle: "italic" }}>me duart tuaja.</em>
         </h2>
         <p style={{ fontSize: 15, color: "var(--text-2)", lineHeight: 1.6, margin: "0 0 32px", maxWidth: 420 }}>
-          Rr. Sami Frashëri 14, Tiranë · Hënë–Shtunë 9–20<br />
+          Kosovë · Hënë–Shtunë 9–20<br />
           Konsulencë falas me specialistët tanë të dizajnit.
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>

@@ -19,7 +19,7 @@ const SECTIONS = [
     key: "delivery",
     label: "Dorëzimi & Montimi",
     content:
-      "Dorëzim falas për porosi mbi €500 brenda Tiranës; rreth Shqipërisë me çmim të rënë dakord. Shërbimi i montimit është i disponueshëm si shtesë. Koha e dorëzimit: 3–7 ditë pune për artikujt në stok.",
+      "Dorëzim falas për porosi mbi €500 në të gjithë Kosovën. Shërbimi i montimit është i disponueshëm si shtesë. Koha e dorëzimit: 3–7 ditë pune për artikujt në stok.",
   },
   {
     key: "returns",
