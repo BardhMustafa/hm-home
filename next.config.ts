@@ -9,6 +9,17 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // Admin product/category forms post images through server actions; the
+      // Next default is 1MB, which rejects any real photo before the action
+      // runs. Images are compressed client-side (~100-400KB each), so this
+      // is headroom, not the working size. Vercel still caps request bodies
+      // at 4.5MB at the platform level.
+      bodySizeLimit: "8mb",
+    },
+  },
+
   images: {
     // Supabase Storage CDN — allow both the modern .co and legacy .in TLDs.
     remotePatterns: [

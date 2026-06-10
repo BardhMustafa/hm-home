@@ -19,8 +19,15 @@ const schema = z.object({
 });
 
 export type CategoryFormState =
-  | { error?: string; fieldErrors?: Record<string, string> }
+  | { error?: string; success?: string; fieldErrors?: Record<string, string> }
   | undefined;
+
+const SESSION_EXPIRED =
+  "Sesioni juaj ka skaduar. Rifreskoni faqen dhe kyçuni përsëri.";
+
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : "Gabim i papritur.";
+}
 
 async function assertAdmin() {
   const supabase = await createClient();
@@ -44,11 +51,20 @@ async function uploadCategoryImage(slug: string, file: File) {
     throw new Error("Imazhi është shumë i madh (max 8MB).");
   }
   const buf = Buffer.from(await file.arrayBuffer());
-  const webp = await sharp(buf)
-    .rotate()
-    .resize({ width: 1200, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
+  let webp: Buffer;
+  try {
+    webp = await sharp(buf)
+      .rotate()
+      .resize({ width: 1200, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+  } catch {
+    // sharp can't decode this format (e.g. HEIC from an iPhone when the
+    // browser couldn't convert it client-side).
+    throw new Error(
+      `Formati i imazhit "${file.name}" nuk mbështetet. Përdorni JPG, PNG ose WebP.`,
+    );
+  }
 
   const path = `${slug}/${Date.now()}.webp`;
   const admin = createAdminClient();
@@ -74,7 +90,11 @@ export async function createCategory(
   _prev: CategoryFormState,
   formData: FormData,
 ): Promise<CategoryFormState> {
-  await assertAdmin();
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: SESSION_EXPIRED };
+  }
   const parsed = parseForm(formData);
   if (!parsed.success) {
     return {
@@ -91,7 +111,11 @@ export async function createCategory(
   let image_url: string | null = null;
   const file = formData.get("image") as File | null;
   if (file && file.size > 0) {
-    image_url = await uploadCategoryImage(slug, file);
+    try {
+      image_url = await uploadCategoryImage(slug, file);
+    } catch (e) {
+      return { error: `Ngarkimi i imazhit dështoi: ${errorMessage(e)}` };
+    }
   }
 
   const { data, error } = await admin
@@ -112,7 +136,11 @@ export async function updateCategory(
   _prev: CategoryFormState,
   formData: FormData,
 ): Promise<CategoryFormState> {
-  await assertAdmin();
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: SESSION_EXPIRED };
+  }
   const parsed = parseForm(formData);
   if (!parsed.success) {
     return {
@@ -137,7 +165,11 @@ export async function updateCategory(
       .eq("id", id)
       .maybeSingle();
     oldPath = storagePathFromPublicUrl(existing?.image_url, BUCKET);
-    update.image_url = await uploadCategoryImage(slug, file);
+    try {
+      update.image_url = await uploadCategoryImage(slug, file);
+    } catch (e) {
+      return { error: `Ngarkimi i imazhit dështoi: ${errorMessage(e)}` };
+    }
   }
 
   const { error } = await admin.from("categories").update(update).eq("id", id);
@@ -151,7 +183,7 @@ export async function updateCategory(
   revalidatePath("/admin/categories");
   revalidatePath("/shop");
   revalidatePath("/");
-  return undefined;
+  return { success: "Ndryshimet u ruajtën." };
 }
 
 export async function deleteCategory(id: string) {

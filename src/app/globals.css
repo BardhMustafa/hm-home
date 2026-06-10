@@ -20,7 +20,9 @@
 
   --text: #f2ede4;
   --text-2: #c9c0b1;
-  --muted: #7d7568;
+  /* --muted bumped from #7d7568 (~4.37:1 on --bg) to clear WCAG AA (4.5:1)
+     for the many small (11–13px) muted labels across the UI; now ~4.8:1. */
+  --muted: #847b6d;
   --muted-2: #5a5347;
 
   --it-green: #2f6b3f;

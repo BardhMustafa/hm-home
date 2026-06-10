@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getCart } from "@/lib/cart";
+import { getHomepageCategories } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/supabase/env";
 import { Header } from "@/components/home/header";
@@ -16,6 +17,11 @@ export default async function CartPage() {
   const user = hasSupabase()
     ? (await (await createClient()).auth.getUser()).data.user
     : null;
+
+  // Real categories for the empty-state quick-access grid (only when needed,
+  // so a full cart doesn't pay for the query). Avoids fabricated counts/slugs.
+  const startCategories =
+    cart.lines.length === 0 ? (await getHomepageCategories()).slice(0, 4) : [];
 
   return (
     <>
@@ -135,12 +141,7 @@ export default async function CartPage() {
                   gap: 1,
                 }}
               >
-                {[
-                  { name: "Kuzhina", slug: "kuzhina", n: "42" },
-                  { name: "Divana", slug: "divana", n: "68" },
-                  { name: "Dhoma Gjumi", slug: "dhoma-gjumi", n: "31" },
-                  { name: "Dekore", slug: "dekore", n: "124" },
-                ].map((cat, i) => (
+                {startCategories.map((cat, i) => (
                   <Link
                     key={cat.slug}
                     href={`/shop?cat=${cat.slug}`}
@@ -169,7 +170,7 @@ export default async function CartPage() {
                         {cat.name}
                       </div>
                       <div style={{ fontSize: 11, letterSpacing: "0.18em", color: "var(--gold)", textTransform: "uppercase" }}>
-                        {cat.n} produkte →
+                        {cat.productCount} {cat.productCount === 1 ? "produkt" : "produkte"} →
                       </div>
                     </div>
                   </Link>

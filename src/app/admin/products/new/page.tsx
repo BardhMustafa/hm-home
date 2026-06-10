@@ -13,7 +13,12 @@ export default async function NewProductPage() {
 
   return (
     <>
-      <AdminPageHeader eyebrow="Produktet" title="Produkt i ri" />
+      <AdminPageHeader
+        eyebrow="Produktet"
+        title="Produkt i ri"
+        backHref="/admin/products"
+        backLabel="Produktet"
+      />
       <ProductForm mode="create" categories={categories ?? []} />
     </>
   );

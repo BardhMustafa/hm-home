@@ -11,6 +11,11 @@ import { hasSupabaseAdmin } from "@/lib/supabase/env";
 
 const SESSION_COOKIE = "hm_session";
 
+// Hard upper bound on a single cart line. In-stock items are already capped by
+// available stock; this also caps made-to-order items (stock === null) so a
+// bot/prankster can't submit an order for an absurd quantity.
+const MAX_LINE_QTY = 99;
+
 export type CartLine = {
   cart_item_id: string;
   product_id: string;
@@ -210,7 +215,10 @@ export async function addToCart(productId: string, qty = 1): Promise<void> {
     .maybeSingle();
 
   const newQty = (existing?.quantity ?? 0) + qty;
-  const nextQty = product.stock === null ? newQty : Math.min(product.stock, newQty);
+  const nextQty =
+    product.stock === null
+      ? Math.min(MAX_LINE_QTY, newQty)
+      : Math.min(product.stock, newQty);
   // stock === 0 (sold out) clamps to 0; never write a non-positive quantity
   // (the DB CHECK (quantity > 0) would reject it).
   if (nextQty <= 0) return;
@@ -265,7 +273,8 @@ export async function updateCartItem(
     const s = Array.isArray(p) ? p[0]?.stock : p.stock;
     return s ?? null; // null = made-to-order, no cap
   })();
-  const capped = stock === null ? qty : Math.min(qty, stock);
+  const capped =
+    stock === null ? Math.min(qty, MAX_LINE_QTY) : Math.min(qty, stock);
   if (capped <= 0) {
     await admin.from("cart_items").delete().eq("id", item.id);
     return;

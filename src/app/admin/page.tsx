@@ -52,7 +52,20 @@ export default async function AdminDashboard() {
 
   return (
     <>
-      <AdminPageHeader eyebrow="Admin" title="Paneli i administrimit" />
+      <AdminPageHeader
+        eyebrow="Admin"
+        title="Paneli i administrimit"
+        actions={
+          <>
+            <Link href="/admin/orders?status=pending" className="btn">
+              Porositë në pritje
+            </Link>
+            <Link href="/admin/products/new" className="btn btn--solid">
+              + Produkt i ri
+            </Link>
+          </>
+        }
+      />
 
       <div
         style={{
@@ -74,26 +87,53 @@ export default async function AdminDashboard() {
 
       <div className="r-split r-split--2" style={{ gap: 24 }}>
         <section>
-          <h2
-            className="serif"
-            style={{ fontSize: 22, margin: "0 0 16px" }}
-          >
-            Porositë e fundit
-          </h2>
+          <SectionTitle href="/admin/orders">Porositë e fundit</SectionTitle>
           <RecentOrdersTable rows={(recentOrders ?? []) as RecentOrder[]} />
         </section>
 
         <section>
-          <h2
-            className="serif"
-            style={{ fontSize: 22, margin: "0 0 16px" }}
-          >
-            Stoku i ulët
-          </h2>
+          <SectionTitle href="/admin/products">Stoku i ulët</SectionTitle>
           <LowStockList rows={lowStock ?? []} />
         </section>
       </div>
     </>
+  );
+}
+
+function SectionTitle({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        justifyContent: "space-between",
+        gap: 12,
+        margin: "0 0 16px",
+      }}
+    >
+      <h2 className="serif" style={{ fontSize: 22, margin: 0 }}>
+        {children}
+      </h2>
+      <Link
+        href={href}
+        style={{
+          fontSize: 11,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "var(--gold)",
+          textDecoration: "none",
+          whiteSpace: "nowrap",
+        }}
+      >
+        Të gjitha →
+      </Link>
+    </div>
   );
 }
 

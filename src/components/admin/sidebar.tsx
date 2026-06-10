@@ -1,14 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/home/wordmark";
+import { AdminNav } from "@/components/admin/nav";
 import { signout } from "@/app/auth/actions";
-
-const NAV = [
-  { href: "/admin", label: "Paneli" },
-  { href: "/admin/products", label: "Produktet" },
-  { href: "/admin/categories", label: "Kategoritë" },
-  { href: "/admin/orders", label: "Porositë" },
-  { href: "/admin/visits", label: "Vizitat" },
-];
 
 export function AdminSidebar() {
   return (
@@ -35,25 +28,7 @@ export function AdminSidebar() {
         Admin
       </div>
 
-      <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {NAV.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            style={{
-              padding: "10px 12px",
-              fontSize: 13,
-              letterSpacing: "0.08em",
-              color: "var(--text-2)",
-              textDecoration: "none",
-              borderLeft: "2px solid transparent",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <AdminNav />
 
       <div className="r-admin-signout" style={{ marginTop: "auto" }}>
         <form action={signout}>

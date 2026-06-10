@@ -9,6 +9,7 @@ import {
   type CategoryFormState,
 } from "@/app/admin/categories/actions";
 import { slugify } from "@/lib/slug";
+import { compressImage } from "@/lib/compress-image";
 
 type Category = {
   id: string;
@@ -71,7 +72,31 @@ export function CategoryForm({
         </Field>
 
         {state?.error && (
-          <div style={{ color: "var(--sale)", fontSize: 13 }}>{state.error}</div>
+          <div
+            style={{
+              padding: "12px 14px",
+              background: "rgba(196,106,58,0.1)",
+              border: "1px solid var(--sale)",
+              color: "var(--sale)",
+              fontSize: 13,
+            }}
+          >
+            {state.error}
+          </div>
+        )}
+
+        {state?.success && !pending && (
+          <div
+            style={{
+              padding: "12px 14px",
+              background: "rgba(16,185,129,0.08)",
+              border: "1px solid #10b981",
+              color: "#10b981",
+              fontSize: 13,
+            }}
+          >
+            ✓ {state.success}
+          </div>
         )}
 
         <div style={{ display: "flex", gap: 10 }}>
@@ -112,6 +137,19 @@ export function CategoryForm({
           type="file"
           name="image"
           accept="image/*"
+          onChange={async (e) => {
+            // Compress in the browser so the server-action body stays small
+            // and HEIC photos are converted before reaching sharp.
+            const input = e.currentTarget;
+            const file = input.files?.[0];
+            if (!file) return;
+            const compressed = await compressImage(file);
+            if (compressed !== file) {
+              const dt = new DataTransfer();
+              dt.items.add(compressed);
+              input.files = dt.files;
+            }
+          }}
           style={{
             padding: 8,
             background: "var(--bg)",

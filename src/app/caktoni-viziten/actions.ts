@@ -4,10 +4,13 @@ import "server-only";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasSupabaseAdmin } from "@/lib/supabase/env";
+import { isValidPhone } from "@/lib/phone";
+import { isHoneypotTripped } from "@/lib/honeypot";
+import { getClientIp, checkRateLimit } from "@/lib/anti-abuse";
 
 const visitSchema = z.object({
   full_name: z.string().trim().min(2, "Emri është i detyrueshëm."),
-  phone: z.string().trim().min(5, "Numri i telefonit është i detyrueshëm."),
+  phone: z.string().trim().refine(isValidPhone, "Numri i telefonit nuk është valid."),
   email: z.string().trim().email("Email i pavlefshëm.").optional().or(z.literal("")),
   preferred_date: z.string().trim().optional().nullable(),
   preferred_time: z.string().trim().optional().nullable(),
@@ -22,6 +25,17 @@ export async function requestVisit(
   _prev: VisitState,
   formData: FormData,
 ): Promise<VisitState> {
+  // Honeypot: pretend success so bots don't learn the field is a trap.
+  if (isHoneypotTripped(formData)) {
+    return { ok: true };
+  }
+
+  // Rate limit per IP to stop the public visit form from being flooded.
+  const ip = await getClientIp();
+  if (ip && !(await checkRateLimit(`visit:${ip}`, 5, 3600))) {
+    return { error: "Keni dërguar shumë kërkesa. Provoni më vonë." };
+  }
+
   const parsed = visitSchema.safeParse({
     full_name: formData.get("full_name"),
     phone: formData.get("phone"),

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatusChanger } from "@/components/admin/status-changer";
@@ -27,25 +26,9 @@ export default async function AdminOrderDetailPage({
       <AdminPageHeader
         eyebrow={`Porosi · ${id.slice(0, 8).toUpperCase()}`}
         title={order.full_name}
+        backHref="/admin/orders"
+        backLabel="Porositë"
       />
-
-      {/* Back link */}
-      <Link
-        href="/admin/orders"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: 11,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: "var(--muted)",
-          textDecoration: "none",
-          marginBottom: 28,
-        }}
-      >
-        ← Kthehu te porositë
-      </Link>
 
       {/* Current status banner */}
       <div

@@ -8,11 +8,18 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCart } from "@/lib/cart";
 import { grantOrderAccess } from "@/lib/order-access";
+import { isValidPhone } from "@/lib/phone";
+import { isHoneypotTripped } from "@/lib/honeypot";
+import { getClientIp, checkRateLimit } from "@/lib/anti-abuse";
+import { sendOrderEmails } from "@/lib/email";
 
 const checkoutSchema = z.object({
   full_name: z.string().trim().min(2),
   email: z.string().email(),
-  phone: z.string().trim().min(5),
+  phone: z
+    .string()
+    .trim()
+    .refine(isValidPhone, "Numri i telefonit nuk është valid."),
   country: z.string().trim().min(2),
   city: z.string().trim().min(2),
   address: z.string().trim().min(3),
@@ -28,6 +35,19 @@ export async function placeOrder(
   _prev: CheckoutState,
   formData: FormData,
 ): Promise<CheckoutState> {
+  // Honeypot: a real user can't fill a field they can't see. Reject quietly
+  // with a generic error (don't reveal the trap).
+  if (isHoneypotTripped(formData)) {
+    return { error: "Porosia dështoi. Provoni përsëri." };
+  }
+
+  // Rate limit per IP — no payment friction means nothing else caps order
+  // volume. Fails open if the IP is unknown (local dev) or the limiter errors.
+  const ip = await getClientIp();
+  if (ip && !(await checkRateLimit(`order:${ip}`, 8, 3600))) {
+    return { error: "Keni dërguar shumë porosi. Provoni më vonë." };
+  }
+
   const parsed = checkoutSchema.safeParse({
     full_name: formData.get("full_name"),
     email: formData.get("email"),
@@ -100,7 +120,26 @@ export async function placeOrder(
   // Let this browser view the receipt without exposing it to others.
   await grantOrderAccess(orderId as string);
 
-  // TODO: send order confirmation email via Resend.
+  // Notify the owner (so they phone the customer) and confirm to the customer.
+  // Built from the server-resolved cart snapshot captured before placement —
+  // place_order clears the cart, but `cart` is still in memory here. Best-effort
+  // and awaited so it runs before the redirect, but never throws.
+  await sendOrderEmails({
+    orderId: orderId as string,
+    fullName: parsed.data.full_name,
+    phone: parsed.data.phone,
+    email: parsed.data.email,
+    address: parsed.data.address,
+    city: parsed.data.city,
+    country: parsed.data.country,
+    notes: parsed.data.notes,
+    lines: cart.lines.map((l) => ({
+      name: l.name,
+      quantity: l.quantity,
+      line_total: l.line_total,
+    })),
+    total: cart.subtotal,
+  });
 
   revalidatePath("/", "layout");
   redirect(`/checkout/success/${orderId}`);

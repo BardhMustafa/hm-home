@@ -22,7 +22,12 @@ export default async function EditCategoryPage({
 
   return (
     <>
-      <AdminPageHeader eyebrow="Kategoritë" title={category.name} />
+      <AdminPageHeader
+        eyebrow="Kategoritë"
+        title={category.name}
+        backHref="/admin/categories"
+        backLabel="Kategoritë"
+      />
       <CategoryForm mode="edit" category={category} />
     </>
   );

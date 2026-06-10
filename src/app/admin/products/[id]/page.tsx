@@ -27,7 +27,12 @@ export default async function EditProductPage({
 
   return (
     <>
-      <AdminPageHeader eyebrow="Produktet" title={product.name} />
+      <AdminPageHeader
+        eyebrow="Produktet"
+        title={product.name}
+        backHref="/admin/products"
+        backLabel="Produktet"
+      />
       <ProductForm
         mode="edit"
         product={product}

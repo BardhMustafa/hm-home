@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 const VALUES = [
   { number: "20+", label: "Vite eksperiencë", sub: "Që nga viti 2002" },
   { number: "100%", label: "Cilësi europiane", sub: "Direkt nga prodhuesi" },
-  { number: "3", label: "Sallone", sub: "Në të gjithë Kosovën" },
+  { number: "2 vjet", label: "Garanci", sub: "Për çdo produkt" },
 ];
 
 export function ValuesStrip() {
@@ -26,9 +26,39 @@ export function ValuesStrip() {
     el.style.transform = "translateY(56px)";
     el.style.willChange = "transform, opacity";
 
-    let raf: number;
+    let raf = 0;
+    let running = false;
     let y = 56, targetY = 56;
     let op = 0, targetOp = 0;
+
+    // Step toward the scroll-driven target; once we're close enough, snap and
+    // stop the rAF loop so it doesn't spin forever while idle. onScroll wakes
+    // it back up when new input arrives.
+    function tick() {
+      y += (targetY - y) * 0.07;
+      op += (targetOp - op) * 0.07;
+      const settled =
+        Math.abs(targetY - y) < 0.1 && Math.abs(targetOp - op) < 0.002;
+      if (settled) {
+        y = targetY;
+        op = targetOp;
+      }
+      el!.style.transform = `translateY(${y.toFixed(1)}px)`;
+      el!.style.opacity = op.toFixed(3);
+      if (settled) {
+        running = false;
+        raf = 0;
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      if (!running) {
+        running = true;
+        raf = requestAnimationFrame(tick);
+      }
+    }
 
     function onScroll() {
       const top = el!.getBoundingClientRect().top;
@@ -36,23 +66,15 @@ export function ValuesStrip() {
       const p = Math.max(0, Math.min(1, (wh - top) / (wh * 0.72)));
       targetY = (1 - p) * 56;
       targetOp = Math.min(1, p * 1.6);
-    }
-
-    function animate() {
-      y += (targetY - y) * 0.07;
-      op += (targetOp - op) * 0.07;
-      el!.style.transform = `translateY(${y.toFixed(1)}px)`;
-      el!.style.opacity = op.toFixed(3);
-      raf = requestAnimationFrame(animate);
+      start();
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    raf = requestAnimationFrame(animate);
     onScroll();
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(raf);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 

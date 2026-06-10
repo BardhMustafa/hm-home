@@ -36,42 +36,23 @@ export async function updateOrderStatus(orderId: string, formData: FormData) {
   }
   const admin = createAdminClient();
 
-  // Detect a transition INTO cancelled so we restore the reserved stock
-  // exactly once (re-cancelling an already-cancelled order is a no-op).
-  const { data: current } = await admin
-    .from("orders")
-    .select("status")
-    .eq("id", orderId)
-    .maybeSingle();
-  if (!current) throw new Error("Order not found");
-  const becomingCancelled =
-    status === "cancelled" && current.status !== "cancelled";
-
-  await admin.from("orders").update({ status }).eq("id", orderId);
-
-  if (becomingCancelled) {
-    // Return the reserved units to inventory for items whose product still
-    // exists and tracks stock (NULL stock = made-to-order, never decremented).
-    const { data: items } = await admin
-      .from("order_items")
-      .select("product_id, quantity")
-      .eq("order_id", orderId);
-    for (const it of items ?? []) {
-      if (!it.product_id) continue;
-      const { data: p } = await admin
-        .from("products")
-        .select("stock")
-        .eq("id", it.product_id)
-        .maybeSingle();
-      if (p && p.stock !== null) {
-        await admin
-          .from("products")
-          .update({ stock: p.stock + it.quantity })
-          .eq("id", it.product_id);
-      }
-    }
+  if (status === "cancelled") {
+    // Atomic + idempotent cancel: the RPC's conditional UPDATE is the gate
+    // (only the transition INTO cancelled restocks) and the restock is a
+    // single set-based UPDATE. Avoids the TOCTOU + lost-update races of doing
+    // this in app code. See migration 0007.
+    const { error } = await admin.rpc("cancel_order_restock", {
+      p_order_id: orderId,
+    });
+    if (error) throw new Error(error.message);
     revalidatePath("/shop");
     revalidatePath("/");
+  } else {
+    const { error } = await admin
+      .from("orders")
+      .update({ status })
+      .eq("id", orderId);
+    if (error) throw new Error(error.message);
   }
 
   revalidatePath(`/admin/orders/${orderId}`);

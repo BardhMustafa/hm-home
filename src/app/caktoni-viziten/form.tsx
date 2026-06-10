@@ -2,6 +2,17 @@
 
 import { useActionState } from "react";
 import { requestVisit, type VisitState } from "./actions";
+import { HONEYPOT_FIELD } from "@/lib/honeypot";
+
+// Off-screen, aria-hidden, untabbable input bots tend to fill; real users
+// never see or focus it.
+const honeypotStyle: React.CSSProperties = {
+  position: "absolute",
+  left: "-9999px",
+  width: 1,
+  height: 1,
+  opacity: 0,
+};
 
 const TIME_SLOTS = [
   "09:00 – 11:00",
@@ -61,6 +72,14 @@ export function VisitForm() {
       action={action}
       style={{ display: "flex", flexDirection: "column", gap: 18 }}
     >
+      <input
+        type="text"
+        name={HONEYPOT_FIELD}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={honeypotStyle}
+      />
       <div className="eyebrow">Caktoni vizitën tuaj</div>
 
       <Row>

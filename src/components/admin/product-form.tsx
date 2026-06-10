@@ -10,6 +10,7 @@ import {
   type ProductFormState,
 } from "@/app/admin/products/actions";
 import { slugify } from "@/lib/slug";
+import { compressImage } from "@/lib/compress-image";
 
 type Category = { id: string; name: string };
 type ExistingImage = { id: string; image_url: string; position: number };
@@ -49,7 +50,29 @@ export function ProductForm({
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
   const [madeToOrder, setMadeToOrder] = useState(product?.stock === null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [compressing, setCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Compress on selection and put the compressed files back into the input,
+  // so the form action submits small WebP files instead of multi-MB photos
+  // (which would blow past the server-action body limit).
+  async function onFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) {
+      setSelectedFiles([]);
+      return;
+    }
+    setCompressing(true);
+    try {
+      const compressed = await Promise.all(files.map(compressImage));
+      const dt = new DataTransfer();
+      compressed.forEach((f) => dt.items.add(f));
+      if (fileInputRef.current) fileInputRef.current.files = dt.files;
+      setSelectedFiles(compressed);
+    } finally {
+      setCompressing(false);
+    }
+  }
 
   const fieldErr = (k: string) => state?.fieldErrors?.[k];
 
@@ -246,13 +269,33 @@ export function ProductForm({
             </div>
           )}
 
+          {state?.success && !pending && (
+            <div
+              style={{
+                padding: "12px 14px",
+                background: "rgba(16,185,129,0.08)",
+                border: "1px solid #10b981",
+                color: "#10b981",
+                fontSize: 13,
+              }}
+            >
+              ✓ {state.success}
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-            <button type="submit" className="btn btn--solid" disabled={pending}>
+            <button
+              type="submit"
+              className="btn btn--solid"
+              disabled={pending || compressing}
+            >
               {pending
                 ? "Duke ruajtur…"
-                : mode === "create"
-                  ? "Krijo produktin"
-                  : "Ruaj ndryshimet"}
+                : compressing
+                  ? "Duke përpunuar imazhet…"
+                  : mode === "create"
+                    ? "Krijo produktin"
+                    : "Ruaj ndryshimet"}
             </button>
             {mode === "edit" && product && <DeleteButton productId={product.id} />}
           </div>
@@ -323,7 +366,11 @@ export function ProductForm({
               <line x1={12} y1={3} x2={12} y2={15} />
             </svg>
 
-            {selectedFiles.length > 0 ? (
+            {compressing ? (
+              <div style={{ fontSize: 13, color: "var(--gold)" }}>
+                Duke përpunuar imazhet…
+              </div>
+            ) : selectedFiles.length > 0 ? (
               <>
                 <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 500 }}>
                   {selectedFiles.length} skedar{selectedFiles.length > 1 ? "ë" : ""} zgjedhur
@@ -402,7 +449,7 @@ export function ProductForm({
               accept="image/*"
               multiple
               style={{ display: "none" }}
-              onChange={(e) => setSelectedFiles(Array.from(e.target.files ?? []))}
+              onChange={onFilesSelected}
             />
           </div>
         </aside>

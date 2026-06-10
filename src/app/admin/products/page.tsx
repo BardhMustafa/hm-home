@@ -11,15 +11,16 @@ const PAGE_SIZE = 50;
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, q: qParam } = await searchParams;
+  const q = (qParam ?? "").trim();
   const page = Math.max(1, Number(pageParam) || 1);
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
   const supabase = await createClient();
-  const { data: raw, count } = await supabase
+  let query = supabase
     .from("products")
     .select(
       "id, name, slug, price, discount_price, stock, featured, category:categories(name), images:product_images(image_url, position)",
@@ -27,6 +28,8 @@ export default async function AdminProductsPage({
     )
     .order("created_at", { ascending: false })
     .range(from, to);
+  if (q) query = query.ilike("name", `%${q}%`);
+  const { data: raw, count } = await query;
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   // Supabase's PostgREST returns nested FK relations as arrays by default
@@ -49,6 +52,48 @@ export default async function AdminProductsPage({
         }
       />
 
+      {/* Search by name — plain GET form, works without client JS. */}
+      <form
+        method="GET"
+        action="/admin/products"
+        style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}
+      >
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          placeholder="Kërko produkt sipas emrit…"
+          style={{
+            flex: "1 1 260px",
+            maxWidth: 380,
+            padding: "10px 12px",
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+            color: "var(--text)",
+            fontSize: 13,
+            outline: "none",
+          }}
+        />
+        <button type="submit" className="btn">
+          Kërko
+        </button>
+        {q && (
+          <Link
+            href="/admin/products"
+            className="btn btn--ghost"
+            style={{ alignSelf: "center" }}
+          >
+            ✕ Pastro
+          </Link>
+        )}
+      </form>
+
+      {q && (
+        <div style={{ marginBottom: 16, fontSize: 13, color: "var(--muted)" }}>
+          {count ?? 0} produkte u gjetën për &ldquo;{q}&rdquo;
+        </div>
+      )}
+
       {!products?.length ? (
         <div
           style={{
@@ -59,7 +104,9 @@ export default async function AdminProductsPage({
             textAlign: "center",
           }}
         >
-          Asnjë produkt ende. Shto të parin për të filluar.
+          {q
+            ? "Asnjë produkt nuk përputhet me kërkimin."
+            : "Asnjë produkt ende. Shto të parin për të filluar."}
         </div>
       ) : (
         <table
@@ -141,13 +188,29 @@ export default async function AdminProductsPage({
                   </Td>
                   <Td
                     style={{
-                      color: p.stock === 0 ? "var(--sale)" : "var(--text)",
+                      color:
+                        p.stock === 0
+                          ? "var(--sale)"
+                          : p.stock === null
+                            ? "var(--gold)"
+                            : "var(--text)",
                       fontFamily: "var(--font-mono)",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {p.stock ?? "∞"}
+                    {p.stock === null
+                      ? "Me porosi"
+                      : p.stock === 0
+                        ? "0 — S'ka stok"
+                        : p.stock}
                   </Td>
-                  <Td>{p.featured ? "•" : ""}</Td>
+                  <Td
+                    style={{
+                      color: p.featured ? "var(--gold)" : "var(--muted-2)",
+                    }}
+                  >
+                    {p.featured ? "Po" : "—"}
+                  </Td>
                   <Td style={{ textAlign: "right" }}>
                     <Link
                       href={`/admin/products/${p.id}`}
@@ -173,6 +236,7 @@ export default async function AdminProductsPage({
         page={page}
         totalPages={totalPages}
         pathname="/admin/products"
+        params={q ? { q } : undefined}
       />
     </>
   );

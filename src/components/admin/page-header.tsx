@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 export function AdminPageHeader({
   eyebrow,
   title,
   actions,
+  backHref,
+  backLabel,
 }: {
   eyebrow: string;
   title: string;
   actions?: ReactNode;
+  backHref?: string;
+  backLabel?: string;
 }) {
   return (
     <div
@@ -23,6 +28,22 @@ export function AdminPageHeader({
       }}
     >
       <div>
+        {backHref && (
+          <Link
+            href={backHref}
+            style={{
+              display: "inline-block",
+              marginBottom: 12,
+              fontSize: 11,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--muted)",
+              textDecoration: "none",
+            }}
+          >
+            ← {backLabel ?? "Mbrapa"}
+          </Link>
+        )}
         <div className="eyebrow">{eyebrow}</div>
         <h1
           className="serif"

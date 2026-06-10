@@ -35,6 +35,7 @@ const productSchema = z
 
 export type ProductFormState = {
   error?: string;
+  success?: string;
   fieldErrors?: Record<string, string>;
 } | undefined;
 
@@ -53,6 +54,13 @@ async function assertAdmin() {
     .eq("id", user.id)
     .single();
   if (profile?.role !== "admin") throw new Error("Forbidden");
+}
+
+const SESSION_EXPIRED =
+  "Sesioni juaj ka skaduar. Rifreskoni faqen dhe kyçuni përsëri.";
+
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : "Gabim i papritur.";
 }
 
 function parseProductForm(formData: FormData) {
@@ -93,11 +101,20 @@ async function uploadProductImage(
     throw new Error("Imazhi është shumë i madh (max 8MB).");
   }
   const buf = Buffer.from(await file.arrayBuffer());
-  const webp = await sharp(buf)
-    .rotate() // honor EXIF orientation
-    .resize({ width: 1600, withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
+  let webp: Buffer;
+  try {
+    webp = await sharp(buf)
+      .rotate() // honor EXIF orientation
+      .resize({ width: 1600, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+  } catch {
+    // sharp can't decode this format (e.g. HEIC from an iPhone when the
+    // browser couldn't convert it client-side).
+    throw new Error(
+      `Formati i imazhit "${file.name}" nuk mbështetet. Përdorni JPG, PNG ose WebP.`,
+    );
+  }
 
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
   const storagePath = `products/${productId}/${filename}`;
@@ -123,7 +140,11 @@ export async function createProduct(
   _prev: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
-  await assertAdmin();
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: SESSION_EXPIRED };
+  }
 
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
@@ -146,14 +167,36 @@ export async function createProduct(
     return { error: insertError.message };
   }
 
-  // Image upload — multipart "images" field can have N files.
+  // Image upload — multipart "images" field can have N files. If anything in
+  // this phase fails, roll the product row back so the admin can simply
+  // retry instead of being left with an invisible image-less duplicate.
   const files = formData.getAll("images") as File[];
   const real = files.filter((f) => f && f.size > 0);
   if (real.length) {
-    const uploaded = await Promise.all(
+    const settled = await Promise.allSettled(
       real.map((f, i) => uploadProductImage(inserted.id, f, i)),
     );
-    await admin.from("product_images").insert(
+    const uploaded = settled
+      .filter((s) => s.status === "fulfilled")
+      .map((s) => s.value);
+    const rollback = async () => {
+      if (uploaded.length) {
+        await admin.storage
+          .from(PRODUCT_BUCKET)
+          .remove(uploaded.map((u) => u.storagePath));
+      }
+      await admin.from("products").delete().eq("id", inserted.id);
+    };
+
+    const failed = settled.find((s) => s.status === "rejected");
+    if (failed) {
+      await rollback();
+      return {
+        error: `Ngarkimi i imazheve dështoi: ${errorMessage(failed.reason)}`,
+      };
+    }
+
+    const { error: imgError } = await admin.from("product_images").insert(
       uploaded.map((u) => ({
         product_id: inserted.id,
         storage_path: u.storagePath,
@@ -161,6 +204,10 @@ export async function createProduct(
         position: u.position,
       })),
     );
+    if (imgError) {
+      await rollback();
+      return { error: `Ruajtja e imazheve dështoi: ${imgError.message}` };
+    }
   }
 
   revalidatePath("/admin/products");
@@ -174,7 +221,11 @@ export async function updateProduct(
   _prev: ProductFormState,
   formData: FormData,
 ): Promise<ProductFormState> {
-  await assertAdmin();
+  try {
+    await assertAdmin();
+  } catch {
+    return { error: SESSION_EXPIRED };
+  }
 
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
@@ -203,10 +254,29 @@ export async function updateProduct(
       .select("*", { count: "exact", head: true })
       .eq("product_id", id);
     const start = count ?? 0;
-    const uploaded = await Promise.all(
+    const settled = await Promise.allSettled(
       real.map((f, i) => uploadProductImage(id, f, start + i)),
     );
-    await admin.from("product_images").insert(
+    const uploaded = settled
+      .filter((s) => s.status === "fulfilled")
+      .map((s) => s.value);
+    const removeUploaded = async () => {
+      if (uploaded.length) {
+        await admin.storage
+          .from(PRODUCT_BUCKET)
+          .remove(uploaded.map((u) => u.storagePath));
+      }
+    };
+
+    const failed = settled.find((s) => s.status === "rejected");
+    if (failed) {
+      await removeUploaded();
+      return {
+        error: `Të dhënat u ruajtën, por ngarkimi i imazheve dështoi: ${errorMessage(failed.reason)}`,
+      };
+    }
+
+    const { error: imgError } = await admin.from("product_images").insert(
       uploaded.map((u) => ({
         product_id: id,
         storage_path: u.storagePath,
@@ -214,6 +284,12 @@ export async function updateProduct(
         position: u.position,
       })),
     );
+    if (imgError) {
+      await removeUploaded();
+      return {
+        error: `Të dhënat u ruajtën, por ruajtja e imazheve dështoi: ${imgError.message}`,
+      };
+    }
   }
 
   revalidatePath("/admin/products");
@@ -221,7 +297,7 @@ export async function updateProduct(
   revalidatePath(`/product/${slug}`);
   revalidatePath("/shop");
   revalidatePath("/");
-  return undefined;
+  return { success: "Ndryshimet u ruajtën." };
 }
 
 export async function deleteProduct(
