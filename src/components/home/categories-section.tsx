@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ProductCardData } from "./product-card";
@@ -25,17 +26,81 @@ export function CategoriesSection({
   cats: Cat[];
   productsByCat: Record<string, ProductCardData[]>;
 }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  // Arrows only make sense when the track actually overflows (mobile always,
+  // desktop with 5+ categories). When everything fits, cards grow to fill the
+  // row and this reads as a plain grid — so the arrows hide.
+  const [hasOverflow, setHasOverflow] = useState(false);
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const check = () => setHasOverflow(track.scrollWidth > track.clientWidth + 1);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(track);
+    return () => ro.disconnect();
+  }, []);
+
+  const scrollByCard = (dir: -1 | 1) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const card = track.firstElementChild as HTMLElement | null;
+    const step = card ? card.offsetWidth + 32 : track.clientWidth;
+    track.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
+
+  const arrowStyle: React.CSSProperties = {
+    width: 44,
+    height: 44,
+    borderRadius: "50%",
+    border: "1px solid var(--border-soft)",
+    background: "transparent",
+    color: "var(--text-2)",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
   return (
     <section style={{ padding: "80px 7vw 100px" }}>
-      <div className="eyebrow" style={{ fontSize: 11, letterSpacing: "0.24em", marginBottom: 48 }}>
-        Kategoritë
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 48,
+        }}
+      >
+        <div className="eyebrow" style={{ fontSize: 11, letterSpacing: "0.24em" }}>
+          Kategoritë
+        </div>
+        {hasOverflow && (
+          <div style={{ display: "flex", gap: 12 }}>
+            <button type="button" aria-label="Kategoria e mëparshme" style={arrowStyle} onClick={() => scrollByCard(-1)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button type="button" aria-label="Kategoria tjetër" style={arrowStyle} onClick={() => scrollByCard(1)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       <div
+        ref={trackRef}
+        className="cat-carousel"
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          display: "flex",
           gap: 32,
+          overflowX: "auto",
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {cats.map((cat, i) => {
@@ -46,7 +111,16 @@ export function CategoriesSection({
             <Link
               key={cat.slug}
               href={`/shop?cat=${cat.slug}`}
-              style={{ textDecoration: "none", color: "inherit" }}
+              style={{
+                textDecoration: "none",
+                color: "inherit",
+                // Cards flex between 280px and full width: while they can fit
+                // by shrinking to minWidth the row reads as a grid; only past
+                // that does the track overflow into a scrollable carousel.
+                flex: "1 1 min(340px, 80vw)",
+                minWidth: "min(280px, 80vw)",
+                scrollSnapAlign: "start",
+              }}
             >
               <div
                 className="cat-grid-card"
@@ -91,7 +165,7 @@ export function CategoriesSection({
                       src={prod.image}
                       alt={cat.name}
                       fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
+                      sizes="(max-width: 768px) 80vw, 33vw"
                       style={{ objectFit: "cover", transition: "transform 0.5s ease" }}
                       className="cat-grid-img"
                     />

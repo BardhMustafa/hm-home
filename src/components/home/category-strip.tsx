@@ -10,7 +10,7 @@ const FALLBACK = [
 
 export async function CategoryStrip() {
   const real = await getHomepageCategories();
-  const cats = real.length >= 2 ? real.slice(0, 4) : FALLBACK;
+  const cats = real.length >= 2 ? real.slice(0, 6) : FALLBACK;
   const slugs = cats.map((c) => c.slug);
   const productsByCat = await getProductsByCategorySlugs(slugs, 1);
   return <CategoriesSection cats={cats} productsByCat={productsByCat} />;

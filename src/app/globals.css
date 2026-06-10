@@ -318,17 +318,15 @@ img, video { max-width: 100%; height: auto; }
   .values-grid > div:first-child { border-top: none; }
 }
 
-/* --- Category grid cards --- */
+/* --- Category carousel cards --- */
 .cat-grid-card:hover .cat-grid-img {
   transform: scale(1.06) !important;
 }
 
-@media (max-width: 767px) {
-  /* single column on narrow screens */
-  .cat-grid-cards {
-    grid-template-columns: 1fr !important;
-  }
+.cat-carousel {
+  scrollbar-width: none;
 }
+.cat-carousel::-webkit-scrollbar { display: none; }
 
 /* =====================================================
    CURTAIN REVEAL HERO

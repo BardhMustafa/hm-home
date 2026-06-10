@@ -16,10 +16,10 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
     : false;
   const cart = await getCart();
 
-  // Categories drive the nav so it can never drift from the DB. Up to 4 in
+  // Categories drive the nav so it can never drift from the DB. Up to 6 in
   // the desktop bar (the rest live in /shop); the mobile drawer shows all.
   const categories = await getNavCategories();
-  const navLeft = categories.slice(0, 4);
+  const navLeft = categories.slice(0, 6);
 
   return (
     <HeaderShell overlay={overlay}>
