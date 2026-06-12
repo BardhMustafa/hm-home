@@ -7,6 +7,7 @@ import { hasSupabase } from "@/lib/supabase/env";
 import { MobileMenuButton } from "./mobile-menu";
 import { HeaderShell } from "./header-shell";
 import { NavAccount } from "./nav-account";
+import { CategoryNav } from "./category-nav";
 
 export async function Header({ overlay = false }: { overlay?: boolean }) {
   const supabase = hasSupabase() ? await createClient() : null;
@@ -16,10 +17,10 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
     : false;
   const cart = await getCart();
 
-  // Categories drive the nav so it can never drift from the DB. Up to 6 in
-  // the desktop bar (the rest live in /shop); the mobile drawer shows all.
+  // Categories drive the nav so it can never drift from the DB. The desktop
+  // bar holds them all behind a "Kategoritë" dropdown (so it scales to any
+  // number); the mobile drawer lists them all directly.
   const categories = await getNavCategories();
-  const navLeft = categories.slice(0, 6);
 
   return (
     <HeaderShell overlay={overlay}>
@@ -38,33 +39,7 @@ export async function Header({ overlay = false }: { overlay?: boolean }) {
         </div>
 
         {/* Desktop nav — hidden on mobile via .r-header-nav-left */}
-        <nav
-          className="r-header-nav-left"
-          style={{
-            display: "flex",
-            gap: 28,
-            fontSize: 12,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: "var(--text-2)",
-          }}
-        >
-          {navLeft.length > 0 ? (
-            navLeft.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/shop?cat=${c.slug}`}
-                style={{ color: "inherit", textDecoration: "none" }}
-              >
-                {c.name}
-              </Link>
-            ))
-          ) : (
-            <Link href="/shop" style={{ color: "inherit", textDecoration: "none" }}>
-              Dyqani
-            </Link>
-          )}
-        </nav>
+        <CategoryNav categories={categories} />
       </div>
 
       {/* ── Center: wordmark (always) ── */}
