@@ -92,6 +92,7 @@ export function Hero() {
           className="serif"
           style={{
             fontWeight: 400,
+            fontStyle: "italic",
             fontSize: "clamp(54px, 8vw, 132px)",
             lineHeight: 0.92,
             letterSpacing: "0.02em",
