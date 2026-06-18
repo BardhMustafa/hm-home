@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateCartItemAction } from "@/app/cart/actions";
 
 export function CartQtyControl({
@@ -13,9 +14,14 @@ export function CartQtyControl({
   stock: number | null;
 }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const update = (qty: number) => {
-    startTransition(() => updateCartItemAction(itemId, qty));
+    startTransition(async () => {
+      await updateCartItemAction(itemId, qty);
+      // Refetch the cart route so the transition resolves and the spinner clears.
+      router.refresh();
+    });
   };
 
   const atMin = quantity <= 1;

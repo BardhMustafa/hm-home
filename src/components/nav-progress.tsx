@@ -27,8 +27,13 @@ function NavProgressInner() {
   // Click on any internal <a> → start bar
   useEffect(() => {
     function onLinkClick(e: MouseEvent) {
-      const anchor = (e.target as Element).closest("a");
-      if (!anchor) return;
+      // A click whose nearest interactive ancestor is a <button> (add-to-cart,
+      // wishlist, qty, etc.) is an action, not a navigation. Those buttons sit
+      // inside product-card <a>s and call router.refresh() — the route never
+      // changes, so a bar started here would stick forever. Bail on buttons.
+      const interactive = (e.target as Element).closest("a, button");
+      if (!interactive || interactive.tagName === "BUTTON") return;
+      const anchor = interactive as HTMLAnchorElement;
       const href = anchor.getAttribute("href") ?? "";
       if (!href || href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
       // Same URL as now → no navigation happens, so don't start a bar that

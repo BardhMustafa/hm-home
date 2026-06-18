@@ -1,15 +1,24 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { removeCartItemAction } from "@/app/cart/actions";
 
 export function CartRemoveButton({ itemId }: { itemId: string }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   return (
     <button
       type="button"
-      onClick={() => startTransition(() => removeCartItemAction(itemId))}
+      onClick={() =>
+        startTransition(async () => {
+          await removeCartItemAction(itemId);
+          // Force the cart route to refetch so the transition resolves and the
+          // spinner clears — revalidatePath alone doesn't refresh the open page.
+          router.refresh();
+        })
+      }
       disabled={pending}
       style={{
         fontSize: 26,
