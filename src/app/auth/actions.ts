@@ -70,6 +70,50 @@ export async function register(
   redirect("/auth/login?registered=1");
 }
 
+export async function requestPasswordReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "Plotëso email-in." };
+
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin") ?? "";
+
+  // The link lands on /auth/callback, which exchanges the recovery code for a
+  // session and then bounces to /auth/update-password to set the new password.
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/auth/update-password`,
+  });
+
+  // Always report success — never reveal whether an email is registered.
+  redirect("/auth/forgot-password?sent=1");
+}
+
+export async function updatePassword(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+
+  if (password.length < 8)
+    return { error: "Fjalëkalimi duhet të jetë të paktën 8 karaktere." };
+  if (password !== confirm) return { error: "Fjalëkalimet nuk përputhen." };
+
+  // Requires the recovery session established by the callback. If the link
+  // expired or was never exchanged, updateUser fails with no session.
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error)
+    return {
+      error: "Lidhja ka skaduar ose është e pavlefshme. Kërkoni një link të ri.",
+    };
+
+  revalidatePath("/", "layout");
+  redirect("/auth/login?reset=1");
+}
+
 export async function signout() {
   const supabase = await createClient();
   await supabase.auth.signOut();

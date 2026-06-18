@@ -4,14 +4,14 @@ import { AuthShell } from "@/components/auth/shell";
 
 export const metadata = { title: "Hyr — HM Home" };
 
-type Search = Promise<{ next?: string; registered?: string }>;
+type Search = Promise<{ next?: string; registered?: string; reset?: string }>;
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Search;
 }) {
-  const { next, registered } = await searchParams;
+  const { next, registered, reset } = await searchParams;
 
   return (
     <AuthShell
@@ -37,6 +37,19 @@ export default async function LoginPage({
           }}
         >
           Llogaria u krijua. Kontrollo email-in për konfirmim, pastaj hyr.
+        </div>
+      )}
+      {reset && (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: "10px 12px",
+            border: "1px solid var(--gold-deep)",
+            color: "var(--gold)",
+            fontSize: 13,
+          }}
+        >
+          Fjalëkalimi u ndryshua. Hyr me fjalëkalimin e ri.
         </div>
       )}
       <LoginForm next={next ?? "/account"} />

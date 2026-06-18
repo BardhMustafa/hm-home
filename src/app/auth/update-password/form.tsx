@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
-import { login, type AuthState } from "../actions";
+import { updatePassword, type AuthState } from "../actions";
 import { AuthInput } from "@/components/auth/shell";
 
-export function LoginForm({ next }: { next: string }) {
+export function UpdatePasswordForm() {
   const [state, action, pending] = useActionState<AuthState, FormData>(
-    login,
+    updatePassword,
     undefined,
   );
 
@@ -16,27 +15,20 @@ export function LoginForm({ next }: { next: string }) {
       action={action}
       style={{ display: "flex", flexDirection: "column", gap: 18 }}
     >
-      <input type="hidden" name="next" value={next} />
-      <AuthInput label="Email" name="email" type="email" required autoComplete="email" />
       <AuthInput
-        label="Fjalëkalimi"
+        label="Fjalëkalimi i ri (min. 8 karaktere)"
         name="password"
         type="password"
         required
-        autoComplete="current-password"
+        autoComplete="new-password"
       />
-
-      <Link
-        href="/auth/forgot-password"
-        style={{
-          color: "var(--text-2)",
-          fontSize: 12,
-          textAlign: "right",
-          marginTop: -8,
-        }}
-      >
-        Harruat fjalëkalimin?
-      </Link>
+      <AuthInput
+        label="Konfirmo fjalëkalimin"
+        name="confirm"
+        type="password"
+        required
+        autoComplete="new-password"
+      />
 
       {state?.error && (
         <div style={{ color: "var(--sale)", fontSize: 13 }}>{state.error}</div>
@@ -48,7 +40,7 @@ export function LoginForm({ next }: { next: string }) {
         disabled={pending}
         style={{ justifyContent: "center", marginTop: 6 }}
       >
-        {pending ? "Duke hyrë…" : "Hyr"}
+        {pending ? "Duke ruajtur…" : "Ruaj fjalëkalimin"}
       </button>
     </form>
   );
