@@ -110,7 +110,7 @@ export default async function MyOrdersPage() {
           </div>
         ) : (
           /* ── Orders list ── */
-          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <div style={{ borderTop: "1px solid var(--border-soft)" }}>
             {orders.map((o) => {
               const statusLabel = STATUS_LABEL[o.status] ?? o.status;
               const isDelivered = o.status === "delivered";
@@ -127,8 +127,8 @@ export default async function MyOrdersPage() {
                     gridTemplateColumns: "1fr auto",
                     alignItems: "center",
                     gap: 16,
-                    padding: "20px 20px 20px 24px",
-                    background: "var(--surface)",
+                    padding: "24px 4px",
+                    borderBottom: "1px solid var(--border-soft)",
                     textDecoration: "none",
                     color: "inherit",
                   }}
