@@ -33,9 +33,10 @@ function periodStart(period: string): Date | null {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string; status?: string; dateFrom?: string; dateTo?: string; page?: string }>;
+  searchParams: Promise<{ period?: string; status?: string; dateFrom?: string; dateTo?: string; q?: string; page?: string }>;
 }) {
-  const { period = "all", status = "", dateFrom = "", dateTo = "", page: pageParam } = await searchParams;
+  const { period = "all", status = "", dateFrom = "", dateTo = "", q: qParam, page: pageParam } = await searchParams;
+  const q = (qParam ?? "").trim();
   const page = Math.max(1, Number(pageParam) || 1);
   const supabase = await createClient();
 
@@ -83,6 +84,14 @@ export default async function AdminOrdersPage({
     query = query.eq("status", status);
   }
 
+  // Free-text search across the fields an admin would recognise a customer by.
+  if (q) {
+    const safe = q.replace(/[%,]/g, " ");
+    query = query.or(
+      `full_name.ilike.%${safe}%,phone.ilike.%${safe}%,guest_email.ilike.%${safe}%`,
+    );
+  }
+
   const from = (page - 1) * PAGE_SIZE;
   query = query.range(from, from + PAGE_SIZE - 1);
 
@@ -95,6 +104,7 @@ export default async function AdminOrdersPage({
   if (status) pageParams.status = status;
   if (dateFrom) pageParams.dateFrom = dateFrom;
   if (dateTo) pageParams.dateTo = dateTo;
+  if (q) pageParams.q = q;
 
   return (
     <>
@@ -148,6 +158,43 @@ export default async function AdminOrdersPage({
         ))}
       </div>
 
+      {/* Search by customer — plain GET form, works without client JS. */}
+      <form
+        method="GET"
+        action="/admin/orders"
+        style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}
+      >
+        {/* Preserve active filters when searching. */}
+        {period !== "all" && <input type="hidden" name="period" value={period} />}
+        {status && <input type="hidden" name="status" value={status} />}
+        {dateFrom && <input type="hidden" name="dateFrom" value={dateFrom} />}
+        {dateTo && <input type="hidden" name="dateTo" value={dateTo} />}
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          placeholder="Kërko sipas emrit, telefonit ose email-it…"
+          style={{
+            flex: "1 1 280px",
+            maxWidth: 420,
+            padding: "10px 12px",
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+            color: "var(--text)",
+            fontSize: 13,
+            outline: "none",
+          }}
+        />
+        <button type="submit" className="btn">
+          Kërko
+        </button>
+        {q && (
+          <Link href="/admin/orders" className="btn btn--ghost" style={{ alignSelf: "center" }}>
+            ✕ Pastro
+          </Link>
+        )}
+      </form>
+
       {/* Filter chips */}
       <Suspense>
         <OrdersFilterBar
@@ -169,9 +216,7 @@ export default async function AdminOrdersPage({
         }}
       >
         {count ?? 0} porosi{" "}
-        {period !== "all" || status
-          ? `(të filtruara)`
-          : ""}
+        {period !== "all" || status || q ? `(të filtruara)` : ""}
       </div>
 
       {!orders?.length ? (
@@ -185,7 +230,9 @@ export default async function AdminOrdersPage({
             fontSize: 14,
           }}
         >
-          Asnjë porosi për këtë filtër.
+          {q || period !== "all" || status
+            ? "Asnjë porosi nuk përputhet me filtrat."
+            : "Asnjë porosi ende."}
         </div>
       ) : (
         <table
@@ -200,50 +247,40 @@ export default async function AdminOrdersPage({
           <thead>
             <tr>
               <Th>Klienti</Th>
-              <Th>Kontakti</Th>
-              <Th>Qyteti</Th>
-              <Th>Totali</Th>
               <Th>Statusi</Th>
+              <Th>Totali</Th>
               <Th>Data</Th>
               <Th />
             </tr>
           </thead>
           <tbody>
             {orders.map((o) => (
-              <tr key={o.id} style={{ transition: "background 0.1s" }}>
+              <tr key={o.id}>
+                {/* Customer: name, contact and destination in one scannable cell */}
                 <Td>
-                  <div style={{ color: "var(--text)", fontWeight: 500 }}>{o.full_name}</div>
-                  {o.guest_email && (
-                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                      {o.guest_email}
-                    </div>
-                  )}
+                  <Link
+                    href={`/admin/orders/${o.id}`}
+                    style={{ color: "var(--text)", fontWeight: 500, textDecoration: "none" }}
+                  >
+                    {o.full_name}
+                  </Link>
+                  <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {o.phone && (
+                      <a href={`tel:${o.phone}`} style={{ color: "var(--text-2)", textDecoration: "none" }}>
+                        {o.phone}
+                      </a>
+                    )}
+                    {o.city && <span>· {o.city}</span>}
+                    {o.guest_email && <span>· {o.guest_email}</span>}
+                  </div>
                 </Td>
                 <Td>
-                  {o.phone && (
-                    <a
-                      href={`tel:${o.phone}`}
-                      style={{ color: "var(--text-2)", fontSize: 12, textDecoration: "none" }}
-                    >
-                      {o.phone}
-                    </a>
-                  )}
-                </Td>
-                <Td>
-                  <div style={{ color: "var(--text-2)" }}>{o.city}</div>
-                  {o.address && (
-                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                      {o.address.length > 28 ? o.address.slice(0, 28) + "…" : o.address}
-                    </div>
-                  )}
+                  <StatusBadge status={o.status} />
                 </Td>
                 <Td>
                   <span style={{ color: "var(--gold)", fontWeight: 500 }}>
                     € {Number(o.total).toFixed(2)}
                   </span>
-                </Td>
-                <Td>
-                  <StatusBadge status={o.status} />
                 </Td>
                 <Td>
                   <div style={{ color: "var(--text-2)", fontSize: 12 }}>
@@ -259,18 +296,10 @@ export default async function AdminOrdersPage({
                 <Td style={{ textAlign: "right" }}>
                   <Link
                     href={`/admin/orders/${o.id}`}
-                    style={{
-                      fontSize: 11,
-                      letterSpacing: "0.18em",
-                      textTransform: "uppercase",
-                      color: "var(--gold)",
-                      textDecoration: "none",
-                      padding: "6px 12px",
-                      border: "1px solid var(--border)",
-                      display: "inline-block",
-                    }}
+                    className="btn"
+                    style={{ fontSize: 11, whiteSpace: "nowrap" }}
                   >
-                    Shiko →
+                    Hap →
                   </Link>
                 </Td>
               </tr>

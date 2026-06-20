@@ -97,7 +97,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sq" suppressHydrationWarning>
-      <head>
+      {/* Browser extensions (e.g. dev "locator" tools) inject attributes into
+          <head> before React hydrates; suppress the resulting mismatch warning.
+          suppressHydrationWarning only applies one level deep, so it's needed
+          here in addition to <html>. */}
+      <head suppressHydrationWarning>
         {jsonLd(organizationLd())}
         {jsonLd(websiteLd())}
       </head>

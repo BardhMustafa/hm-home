@@ -160,13 +160,10 @@ export default async function AdminProductsPage({
                   <Td>
                     <Link
                       href={`/admin/products/${p.id}`}
-                      style={{ color: "var(--text)", textDecoration: "none" }}
+                      style={{ color: "var(--text)", textDecoration: "none", fontWeight: 500 }}
                     >
                       {p.name}
                     </Link>
-                    <div style={{ fontSize: 11, color: "var(--muted)" }}>
-                      /{p.slug}
-                    </div>
                   </Td>
                   <Td style={{ color: "var(--text-2)" }}>
                     {p.category?.name ?? "—"}
@@ -214,13 +211,8 @@ export default async function AdminProductsPage({
                   <Td style={{ textAlign: "right" }}>
                     <Link
                       href={`/admin/products/${p.id}`}
-                      style={{
-                        fontSize: 12,
-                        letterSpacing: "0.16em",
-                        textTransform: "uppercase",
-                        color: "var(--gold)",
-                        textDecoration: "none",
-                      }}
+                      className="btn"
+                      style={{ fontSize: 11, whiteSpace: "nowrap" }}
                     >
                       Ndrysho →
                     </Link>

@@ -21,6 +21,8 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
+  const itemCount = items?.reduce((n, it) => n + it.quantity, 0) ?? 0;
+
   return (
     <>
       <AdminPageHeader
@@ -30,25 +32,39 @@ export default async function AdminOrderDetailPage({
         backLabel="Porositë"
       />
 
-      {/* Current status banner */}
+      {/* Key facts — quick glance summary */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "12px 16px",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: 1,
           marginBottom: 24,
         }}
       >
-        <span style={{ fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--muted)" }}>
-          Statusi aktual:
-        </span>
-        <StatusBadge status={order.status} />
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>
-          Krijuar: {new Date(order.created_at).toLocaleString("sq-AL")}
-        </span>
+        <SummaryCell label="Statusi">
+          <StatusBadge status={order.status} />
+        </SummaryCell>
+        <SummaryCell label="Totali">
+          <span className="serif" style={{ fontSize: 22, color: "var(--gold)", lineHeight: 1 }}>
+            € {Number(order.total).toFixed(2)}
+          </span>
+        </SummaryCell>
+        <SummaryCell label="Artikuj">
+          <span className="mono" style={{ fontSize: 22, color: "var(--text)", lineHeight: 1 }}>
+            {itemCount}
+          </span>
+        </SummaryCell>
+        <SummaryCell label="Krijuar">
+          <span style={{ fontSize: 13, color: "var(--text-2)" }}>
+            {new Date(order.created_at).toLocaleDateString("sq-AL")}
+            <span style={{ color: "var(--muted)", marginLeft: 6 }}>
+              {new Date(order.created_at).toLocaleTimeString("sq-AL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </span>
+        </SummaryCell>
       </div>
 
       <div className="r-split r-split--2" style={{ gap: 24 }}>
@@ -115,8 +131,8 @@ export default async function AdminOrderDetailPage({
             <StatusChanger orderId={id} current={order.status} />
           </Card>
 
-          {/* Delivery info */}
-          <Card title="Informacioni i dorëzimit">
+          {/* Customer & delivery */}
+          <Card title="Klienti & dorëzimi">
             <DetailRow label="Emri" value={order.full_name} />
             <DetailRow label="Telefoni">
               <a
@@ -168,11 +184,7 @@ export default async function AdminOrderDetailPage({
           </Card>
 
           {/* Meta */}
-          <Card title="Meta">
-            <DetailRow
-              label="Krijuar"
-              value={new Date(order.created_at).toLocaleString("sq-AL")}
-            />
+          <Card title="Detaje">
             <DetailRow
               label="Lloji"
               value={order.user_id ? "Klient i regjistruar" : "Mysafir"}
@@ -182,6 +194,41 @@ export default async function AdminOrderDetailPage({
         </aside>
       </div>
     </>
+  );
+}
+
+function SummaryCell({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        padding: "16px 18px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10,
+          letterSpacing: "0.2em",
+          textTransform: "uppercase",
+          color: "var(--muted)",
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", minHeight: 24 }}>
+        {children}
+      </div>
+    </div>
   );
 }
 
