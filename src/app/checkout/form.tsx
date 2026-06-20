@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { placeOrder, type CheckoutState } from "./actions";
 import { HONEYPOT_FIELD } from "@/lib/honeypot";
 
@@ -26,11 +26,6 @@ export function CheckoutForm({
     undefined,
   );
 
-  // Stable per-render-session idempotency key: a double-submit (double-click,
-  // Enter-resubmit, retry) carries the same key, so the server places at most
-  // one order for this checkout.
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
-
   const err = (k: string) => state?.fieldErrors?.[k];
 
   return (
@@ -38,7 +33,6 @@ export function CheckoutForm({
       action={action}
       style={{ display: "flex", flexDirection: "column", gap: 18 }}
     >
-      <input type="hidden" name="idempotency_key" value={idempotencyKey} />
       <input
         type="text"
         name={HONEYPOT_FIELD}

@@ -9,11 +9,11 @@ import { isHoneypotTripped } from "@/lib/honeypot";
 import { getClientIp, checkRateLimit } from "@/lib/anti-abuse";
 
 const visitSchema = z.object({
-  full_name: z.string().trim().min(2, "Emri është i detyrueshëm."),
-  phone: z.string().trim().refine(isValidPhone, "Numri i telefonit nuk është valid."),
-  email: z.string().trim().email("Email i pavlefshëm.").optional().or(z.literal("")),
-  preferred_date: z.string().trim().optional().nullable(),
-  preferred_time: z.string().trim().optional().nullable(),
+  full_name: z.string().trim().min(2, "Emri është i detyrueshëm.").max(120),
+  phone: z.string().trim().max(40).refine(isValidPhone, "Numri i telefonit nuk është valid."),
+  email: z.string().trim().email("Email i pavlefshëm.").max(254).optional().or(z.literal("")),
+  preferred_date: z.string().trim().max(40).optional().nullable(),
+  preferred_time: z.string().trim().max(40).optional().nullable(),
   notes: z.string().trim().max(1000).optional().nullable(),
 });
 

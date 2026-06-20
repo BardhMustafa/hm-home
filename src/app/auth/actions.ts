@@ -6,8 +6,11 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { mergeGuestCartOnLogin } from "@/lib/cart";
 import { safeNextPath } from "@/lib/safe-redirect";
+import { getClientIp, checkRateLimit } from "@/lib/anti-abuse";
 
 export type AuthState = { error?: string } | undefined;
+
+const TOO_MANY = "Shumë përpjekje. Provoni më vonë.";
 
 export async function login(
   _prev: AuthState,
@@ -18,6 +21,11 @@ export async function login(
   const next = safeNextPath(formData.get("next"));
 
   if (!email || !password) return { error: "Plotëso email-in dhe fjalëkalimin." };
+
+  // Throttle credential-stuffing: cap login attempts per IP.
+  const ip = await getClientIp();
+  if (ip && !(await checkRateLimit(`login:${ip}`, 10, 600)))
+    return { error: TOO_MANY };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -53,6 +61,11 @@ export async function register(
   if (password.length < 8)
     return { error: "Fjalëkalimi duhet të jetë të paktën 8 karaktere." };
 
+  // Throttle signup spam per IP.
+  const ip = await getClientIp();
+  if (ip && !(await checkRateLimit(`register:${ip}`, 5, 3600)))
+    return { error: TOO_MANY };
+
   const supabase = await createClient();
   const origin = (await headers()).get("origin") ?? "";
 
@@ -64,7 +77,12 @@ export async function register(
       data: { full_name: fullName },
     },
   });
-  if (error) return { error: error.message };
+  // Generic message — don't echo Supabase's raw error (e.g. "User already
+  // registered" is an account-enumeration leak). Log the real cause server-side.
+  if (error) {
+    console.error("[auth] register failed", error.message);
+    return { error: "Regjistrimi dështoi. Kontrollo të dhënat dhe provo sërish." };
+  }
 
   revalidatePath("/", "layout");
   redirect("/auth/login?registered=1");
@@ -76,6 +94,15 @@ export async function requestPasswordReset(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Plotëso email-in." };
+
+  // Throttle reset-email bombing: cap per IP and per target email. Both fail
+  // open. The redirect below is unconditional regardless, so hitting the limit
+  // still doesn't reveal whether the email exists.
+  const ip = await getClientIp();
+  const overLimit =
+    (ip && !(await checkRateLimit(`pwreset-ip:${ip}`, 5, 3600))) ||
+    !(await checkRateLimit(`pwreset-email:${email.toLowerCase()}`, 3, 3600));
+  if (overLimit) redirect("/auth/forgot-password?sent=1");
 
   const supabase = await createClient();
   const origin = (await headers()).get("origin") ?? "";

@@ -8,10 +8,21 @@ import { hasSupabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "./env";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  // No Supabase wired up yet: skip auth gating so the site is browseable
-  // against fixture data. /admin and /account will just render their pages
-  // (and fail with a clearer error if the page itself queries Supabase).
-  if (!hasSupabase()) return response;
+  // No Supabase wired up: in local/dev, skip auth gating so the site is
+  // browseable against fixture data. In PRODUCTION, missing config must not
+  // silently disable protection — fail CLOSED for protected routes rather than
+  // exposing /admin and /account.
+  if (!hasSupabase()) {
+    if (process.env.NODE_ENV === "production") {
+      const path = request.nextUrl.pathname;
+      if (path.startsWith("/admin") || path.startsWith("/account")) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
+    }
+    return response;
+  }
 
   const supabase = createServerClient(
     SUPABASE_URL!,

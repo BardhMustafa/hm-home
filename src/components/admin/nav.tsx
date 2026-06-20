@@ -9,6 +9,7 @@ const NAV = [
   { href: "/admin/categories", label: "Kategoritë" },
   { href: "/admin/orders", label: "Porositë" },
   { href: "/admin/visits", label: "Vizitat" },
+  { href: "/admin/admins", label: "Adminët" },
 ];
 
 // Client component so the current section can be highlighted — the sidebar

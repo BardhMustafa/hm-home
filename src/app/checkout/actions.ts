@@ -1,6 +1,7 @@
 "use server";
 
 import "server-only";
+import { createHash } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -14,17 +15,18 @@ import { getClientIp, checkRateLimit } from "@/lib/anti-abuse";
 import { sendOrderEmails } from "@/lib/email";
 
 const checkoutSchema = z.object({
-  full_name: z.string().trim().min(2),
-  email: z.string().email(),
+  full_name: z.string().trim().min(2).max(120),
+  email: z.string().email().max(254),
   phone: z
     .string()
     .trim()
+    .max(40)
     .refine(isValidPhone, "Numri i telefonit nuk është valid."),
-  country: z.string().trim().min(2),
-  city: z.string().trim().min(2),
-  address: z.string().trim().min(3),
-  postal_code: z.string().trim().optional().nullable(),
-  notes: z.string().trim().optional().nullable(),
+  country: z.string().trim().min(2).max(80),
+  city: z.string().trim().min(2).max(120),
+  address: z.string().trim().min(3).max(300),
+  postal_code: z.string().trim().max(20).optional().nullable(),
+  notes: z.string().trim().max(1000).optional().nullable(),
 });
 
 export type CheckoutState =
@@ -73,8 +75,20 @@ export async function placeOrder(
     return { error: "Shporta juaj është bosh." };
   }
 
-  const idempotencyKey =
-    String(formData.get("idempotency_key") ?? "").trim() || null;
+  // Idempotency key derived server-side from the cart id + a stable signature
+  // of its current contents (item ids + quantities). A double-submit, reload,
+  // or network retry of the SAME cart produces the same key, so place_order
+  // dedups it to a single order. A genuine later re-order gets fresh cart_item
+  // ids (the cart is cleared on success), so it yields a new key and is not
+  // wrongly deduped. Never trust a client-supplied key (a blank one would
+  // silently disable dedup and allow duplicate orders + double stock decrement).
+  const signature = cart.lines
+    .map((l) => `${l.cart_item_id}:${l.quantity}`)
+    .sort()
+    .join("|");
+  const idempotencyKey = createHash("sha256")
+    .update(`${cart.cartId}:${signature}`)
+    .digest("hex");
 
   const supabase = await createClient();
   const {

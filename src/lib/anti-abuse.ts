@@ -3,13 +3,19 @@ import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hasSupabaseAdmin } from "@/lib/supabase/env";
 
-// Best-effort client IP from the proxy headers Vercel/Netlify set. Returns null
-// if absent (e.g. local dev), in which case callers should fail open.
+// Trusted client IP for rate-limit keys. We deliberately do NOT use the
+// leftmost `x-forwarded-for` value: that entry is client-supplied and a caller
+// can rotate it per request to land in a fresh bucket and defeat the limiter.
+// On Vercel, `x-vercel-forwarded-for` is set by the edge and any client-sent
+// copy is stripped, so it's trustworthy; `x-real-ip` (also Vercel-set) is the
+// fallback. Returns null when neither is present (e.g. local dev) → fail open.
 export async function getClientIp(): Promise<string | null> {
   const h = await headers();
-  const xff = h.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0]!.trim() || null;
-  return h.get("x-real-ip");
+  const vercel = h.get("x-vercel-forwarded-for");
+  if (vercel) return vercel.split(",")[0]!.trim() || null;
+  const realIp = h.get("x-real-ip");
+  if (realIp) return realIp.trim() || null;
+  return null;
 }
 
 // DB-backed sliding-window limiter (see migration 0008). Returns true if the
