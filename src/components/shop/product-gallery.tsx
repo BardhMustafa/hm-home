@@ -127,20 +127,31 @@ export function ProductGallery({
             aria-label="Mbyll"
             style={{
               position: "absolute",
-              top: 20,
-              right: 20,
-              width: 40,
-              height: 40,
+              top: 16,
+              right: 16,
+              width: 48,
+              height: 48,
+              padding: 0,
               background: "transparent",
               border: "1px solid var(--border)",
               color: "var(--text)",
-              fontSize: 20,
               cursor: "pointer",
               display: "grid",
               placeItems: "center",
             }}
           >
-            ×
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
           </button>
 
           {lightbox > 0 && (
