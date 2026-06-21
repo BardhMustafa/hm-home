@@ -138,6 +138,8 @@ export function ProductGallery({
               cursor: "pointer",
               display: "grid",
               placeItems: "center",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
             }}
           >
             <svg
@@ -149,6 +151,7 @@ export function ProductGallery({
               strokeWidth="1.5"
               strokeLinecap="round"
               aria-hidden="true"
+              style={{ pointerEvents: "none" }}
             >
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
