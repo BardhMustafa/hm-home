@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    // Images are already compressed client-side before upload and served
+    // from Supabase's own CDN, so routing them through Vercel's Image
+    // Optimization API adds little value while burning the free plan's
+    // Transformations/Cache Writes quota. Serve the originals directly.
+    unoptimized: true,
+
     // Supabase Storage CDN — allow both the modern .co and legacy .in TLDs.
     remotePatterns: [
       {
